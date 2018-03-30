@@ -5,6 +5,8 @@ VisualStudioVersion = 15.0.27428.2015
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "OrionDatabases", "OrionDatabases\OrionDatabases.csproj", "{B5670612-E9CC-4B04-AEE5-E11622096F9B}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "OrionCore", "..\OrionCore\OrionCore\OrionCore.csproj", "{BD00B457-50D5-48BB-B7CB-EA2704D19592}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -21,6 +23,14 @@ Global
 		{B5670612-E9CC-4B04-AEE5-E11622096F9B}.Release|Any CPU.Build.0 = Release|Any CPU
 		{B5670612-E9CC-4B04-AEE5-E11622096F9B}.Release|x86.ActiveCfg = Release|x86
 		{B5670612-E9CC-4B04-AEE5-E11622096F9B}.Release|x86.Build.0 = Release|x86
+		{BD00B457-50D5-48BB-B7CB-EA2704D19592}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{BD00B457-50D5-48BB-B7CB-EA2704D19592}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{BD00B457-50D5-48BB-B7CB-EA2704D19592}.Debug|x86.ActiveCfg = Debug|x86
+		{BD00B457-50D5-48BB-B7CB-EA2704D19592}.Debug|x86.Build.0 = Debug|x86
+		{BD00B457-50D5-48BB-B7CB-EA2704D19592}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{BD00B457-50D5-48BB-B7CB-EA2704D19592}.Release|Any CPU.Build.0 = Release|Any CPU
+		{BD00B457-50D5-48BB-B7CB-EA2704D19592}.Release|x86.ActiveCfg = Release|x86
+		{BD00B457-50D5-48BB-B7CB-EA2704D19592}.Release|x86.Build.0 = Release|x86
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
