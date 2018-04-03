@@ -1,8 +1,10 @@
 ﻿using System;
+using System.IO;
 using System.Data;
 using System.Threading;
 using System.Data.Common;
 using OrionCore.ErrorManagement;
+using OrionCore;
 
 namespace OrionDatabases
 {
@@ -27,6 +29,12 @@ namespace OrionDatabases
         /// <br/>Persistence of the connection. Default value is <i>false</i>.</value>
         /// <see cref="Disconnect" />
         public Boolean PersistentConnection { get; set; }
+        /// <summary>
+        /// Gets the character used to specify parameter names in Sql queries.
+        /// </summary>
+        /// <value>Type : <see cref="Char"/>
+        /// <br/>The parameter character.</value>
+        public Char ParameterCharacter { get; set; }
         /// <summary>
         /// Gets current transaction state.
         /// </summary>
@@ -111,9 +119,6 @@ namespace OrionDatabases
             else
                 throw new OrionException("No connection has been initialized");
         }// Disconnect()
-        #endregion
-
-        #region Public interface
         /// <summary>
         /// Rolls back a transaction from a pending state.
         /// </summary>
@@ -146,7 +151,19 @@ namespace OrionDatabases
 
             if (this.Connection.State != ConnectionState.Closed && this.PersistentConnection == false) this.Disconnect();
         }// RollbackTransaction()
+        #endregion
 
+        #region Protected interface
+        protected static void CheckMissingDll(String dllFileName)
+        {
+            String strDllFilePath;
+
+            if (String.IsNullOrWhiteSpace(dllFileName) == false)
+            {
+                strDllFilePath = Path.Combine(OrionDeploymentInfos.DataFolder, dllFileName);
+                if (File.Exists(strDllFilePath) == false) throw new OrionException("Missing dll [" + dllFileName + "];", "DllFilePath=" + strDllFilePath);
+            }
+        }// CheckMissingDll()
         #endregion
 
         #region Utility procedures
