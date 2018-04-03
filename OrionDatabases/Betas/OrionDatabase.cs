@@ -3,7 +3,9 @@ using System.IO;
 using System.Data;
 using System.Threading;
 using System.Data.Common;
+using System.Collections.ObjectModel;
 using OrionCore.ErrorManagement;
+using OrionDatabases.Queries;
 using OrionCore;
 
 namespace OrionDatabases
@@ -17,6 +19,7 @@ namespace OrionDatabases
     {
         #region Fields
         private Boolean bDisposed;
+        private ObservableCollection<OrionQuery> xQueries;
         #endregion
 
         #region Properties
@@ -41,9 +44,24 @@ namespace OrionDatabases
         /// <value>Type : <see cref="TransactionStates"/>
         /// <br/>State of the current connection. Default value is <i>None</i>.</value>
         public TransactionStates TransactionState { get; private set; }
+        /// <summary>
+        /// Connection string used to establish connection with the target database.
+        /// </summary>
+        /// <value>Type : <see cref="String"/>
+        /// <br/>The connection string used to establish the connection.</value>
+        public String ConnectionString
+        {
+            get
+            {
+                return this.ConnectionStringBuilder.ConnectionString;
+            }
+        }
         public DbConnection Connection { get; set; }
+
         /// <exclude />
         internal DbTransaction Transaction { get; set; }
+        /// <exclude />
+        internal DbConnectionStringBuilder ConnectionStringBuilder { get; set; }
         #endregion
 
         #region Constructors
@@ -76,6 +94,13 @@ namespace OrionDatabases
         {
             throw new NotImplementedException();
         }// LogError()
+        #endregion
+
+        #region Protected interface
+        protected void Initialize()
+        {
+            this.xQueries = new ObservableCollection<OrionQuery>();
+        }//  Initialize()
         #endregion
 
         #region Public interface
@@ -147,7 +172,7 @@ namespace OrionDatabases
             else
                 throw new OrionException("No transaction has been started;");
 
-            //this.xQueries.Clear();
+            this.xQueries.Clear();
 
             if (this.Connection.State != ConnectionState.Closed && this.PersistentConnection == false) this.Disconnect();
         }// RollbackTransaction()

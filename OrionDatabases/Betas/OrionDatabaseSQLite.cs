@@ -1,4 +1,6 @@
 ﻿using System;
+using System.IO;
+using System.Data.SQLite;
 using OrionCore.ErrorManagement;
 
 namespace OrionDatabases
@@ -65,24 +67,46 @@ namespace OrionDatabases
             this.ParameterCharacter = '@';
 
             //** Check if the database file path is valid and indicates an existing file **
-            //XDatabaseSQLite.CheckPathValidity(databaseFilePath);
-            //if (File.Exists(databaseFilePath) == false)
-            //    throw new XException("The specified SQLite database file is missing.", "DatabaseFilePath=" + databaseFilePath);
+            OrionDatabaseSQLite.CheckPathValidity(databaseFilePath);
 
-            //this.ConnectionStringBuilder = new SQLiteConnectionStringBuilder();
+            this.ConnectionStringBuilder = new SQLiteConnectionStringBuilder();
 
-            //base.Initialize();
+            base.Initialize();
 
-            //this.ConnectionStringBuilder["Data Source"] = databaseFilePath;
-            //this.ConnectionStringBuilder["Version"] = "3";
-            //this.ConnectionStringBuilder["FailIfMissing"] = Boolean.FalseString;
+            this.ConnectionStringBuilder["Data Source"] = databaseFilePath;
+            this.ConnectionStringBuilder["Version"] = "3";
+            this.ConnectionStringBuilder["FailIfMissing"] = Boolean.FalseString;
 
-            //// Add password if needed.
-            //if (String.IsNullOrEmpty(password) == false) this.ConnectionStringBuilder["Password"] = password;
+            // Add password if needed.
+            if (String.IsNullOrEmpty(password) == false) this.ConnectionStringBuilder["Password"] = password;
 
-            //// Create the OleDbConnection
-            //this.Connection = new SQLiteConnection(this.ConnectionStringBuilder.ConnectionString, true);
+            // Create the ADO.Net connection
+            this.Connection = new SQLiteConnection(this.ConnectionStringBuilder.ConnectionString, true);
         }// Initialize()
+        #endregion
+
+        #region Utility procedures
+        static private void CheckPathValidity(String databaseFilePath)
+        {
+            String strDirectoryPath;
+
+            if (String.IsNullOrWhiteSpace(databaseFilePath) == true)
+                throw new OrionException("The SQLite database file path can't be null or an empty string.", "DatabaseFilePath=" + databaseFilePath);
+            else
+            {
+                try
+                {
+                    strDirectoryPath = Path.GetDirectoryName(databaseFilePath);
+                }
+                catch (Exception ex)
+                {
+                    throw new OrionException("The database file path is invalid.", ex, "DatabaseFilePath=" + databaseFilePath);
+                }
+
+                if (Directory.Exists(strDirectoryPath) == false) throw new OrionException("The database directory path can't be found.", "DatabaseFilePath=" + databaseFilePath);
+                if (File.Exists(databaseFilePath) == false) throw new OrionException("The specified SQLite database file is missing.", "DatabaseFilePath=" + databaseFilePath);
+            }
+        }// CheckPathValidity()
         #endregion
     }
 }
