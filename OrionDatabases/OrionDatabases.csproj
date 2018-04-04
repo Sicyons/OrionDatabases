@@ -67,6 +67,7 @@
     <Compile Include="Betas\OrionDatabase.cs" />
     <Compile Include="Betas\OrionDatabaseSQLite.cs" />
     <Compile Include="Betas\Queries\OrionQuery.cs" />
+    <Compile Include="Betas\Queries\OrionSelectQuery.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
   </ItemGroup>
   <ItemGroup>

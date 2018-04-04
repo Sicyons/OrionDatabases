@@ -39,6 +39,19 @@ namespace OrionDatabases
         /// <br/>The parameter character.</value>
         public Char ParameterCharacter { get; set; }
         /// <summary>
+        /// Gets a value that describes the current state of the connection.
+        /// </summary>
+        /// <value>Type : <see cref="ConnectionState"/>
+        /// <br/>The current state of the connection.</value>
+        /// <seealso cref="ConnectionState"/>
+        public ConnectionState ConnectionState
+        {
+            get
+            {
+                return this.Connection != null ? this.Connection.State : ConnectionState.Closed;
+            }
+        }
+        /// <summary>
         /// Gets current transaction state.
         /// </summary>
         /// <value>Type : <see cref="TransactionStates"/>
@@ -57,6 +70,24 @@ namespace OrionDatabases
             }
         }
         public DbConnection Connection { get; set; }
+        /// <summary>
+        /// Gets last created <see cref="OrionQuery"/> object if existing.
+        /// </summary>
+        /// <value>Type : <see cref="OrionQuery"/>
+        /// <br/>The current query object.</value>
+        /// <seealso cref="OrionQuery"/> 
+        /// <seealso cref="OrionDeleteQuery"/> 
+        /// <seealso cref="OrionExecuteQuery"/> 
+        /// <seealso cref="OrionInsertQuery"/> 
+        /// <seealso cref="OrionSelectQuery"/>
+        /// <seealso cref="OrionUpdateQuery"/> 
+        public OrionQuery CurrentQuery
+        {
+            get
+            {
+                return this.xQueries != null && this.xQueries.Count > 0 ? this.xQueries[this.xQueries.Count - 1] : null;
+            }
+        }
 
         /// <exclude />
         internal DbTransaction Transaction { get; set; }
@@ -96,6 +127,11 @@ namespace OrionDatabases
         }// LogError()
         #endregion
 
+        #region Virtual and abstract interfaces
+        /// <exclude />
+        internal abstract DbDataAdapter CreateDataAdapter(String sqlRequest);
+        #endregion
+
         #region Protected interface
         protected void Initialize()
         {
@@ -104,6 +140,50 @@ namespace OrionDatabases
         #endregion
 
         #region Public interface
+        /// <summary>
+        /// Establishes a connection to the source database.
+        /// </summary>
+        /// <remarks>Three attempts will be made before throwing an exception if connection can't be established, with a delay of one second between each of them.
+        /// <br />If connection is on <i>Broken</i> state, the <see cref="OrionDatabase" /> will try to properly close it, wait for one second and then establish a new connection.</remarks>
+        /// <exception cref="OrionException">No connection has been initialized.</exception>
+        /// <seealso cref="OrionException" />
+        public void Connect()
+        {
+            Int32 iAttemptCounter;
+
+            if (this.Connection != null)
+            {
+                //** If connection state is Broken, try to disconnect **
+                if (this.Connection.State == ConnectionState.Broken || this.Connection.State == ConnectionState.Connecting)
+                {
+                    this.Disconnect();
+
+                    Thread.Sleep(1000);
+                }
+
+                //** Try to connect to the database (3 attempts) **
+                iAttemptCounter = 0;
+                while (this.Connection.State != ConnectionState.Open && iAttemptCounter < 3)
+                {
+                    try
+                    {
+                        this.Connection.Open();
+                        break;
+                    }
+                    catch (DbException ex)
+                    {
+                        iAttemptCounter++;
+
+                        Thread.Sleep(1000);
+
+                        if (this.Connection.State != ConnectionState.Open && iAttemptCounter == 2)
+                            throw new OrionException("Error while connecting to database (3 attempts)", ex, "ConnectionString=" + this.ConnectionStringBuilder.ToString());
+                    }
+                }
+            }
+            else
+                throw new OrionException("Connection has not been correctly initialized.");
+        }// Connect()
         /// <summary>
         /// Disconnects from the source database.
         /// </summary>
@@ -144,6 +224,35 @@ namespace OrionDatabases
             else
                 throw new OrionException("No connection has been initialized");
         }// Disconnect()
+        public OrionSelectQuery PrepareQuerySelect(String queryString)
+        {
+            Boolean bReplacePreviousQuery;
+            OrionSelectQuery xNewQuery;
+
+            if (String.IsNullOrEmpty(queryString) == false)
+            {
+                bReplacePreviousQuery = true;
+
+                if (this.xQueries.Count != 0)
+                {
+                    if (this.CurrentQuery.Executed == false && this.CurrentQuery.Failed == false)
+                        throw new OrionException("Previous query has not been executed.");
+                    else if (this.TransactionState == TransactionStates.Started)
+                        bReplacePreviousQuery = false;
+                }
+
+                xNewQuery = new OrionSelectQuery(this, queryString);
+                if (xNewQuery != null)
+                {
+                    if (bReplacePreviousQuery == true) this.xQueries.Clear();
+                    this.xQueries.Add(xNewQuery);
+                }
+
+                return xNewQuery;
+            }
+            else
+                throw new OrionException("Query needs a query string to be initialized.");
+        }// PrepareQuerySelect()
         /// <summary>
         /// Rolls back a transaction from a pending state.
         /// </summary>

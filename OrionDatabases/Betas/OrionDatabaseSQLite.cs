@@ -1,5 +1,6 @@
 ﻿using System;
 using System.IO;
+using System.Data.Common;
 using System.Data.SQLite;
 using OrionCore.ErrorManagement;
 
@@ -83,6 +84,44 @@ namespace OrionDatabases
             // Create the ADO.Net connection
             this.Connection = new SQLiteConnection(this.ConnectionStringBuilder.ConnectionString, true);
         }// Initialize()
+        #endregion
+
+        #region Base abstract class implementation
+        /// <exclude />
+        internal override DbDataAdapter CreateDataAdapter(String sqlRequest)
+        {
+            try
+            {
+                return new SQLiteDataAdapter(sqlRequest, (SQLiteConnection)this.Connection);
+            }
+            catch (DbException ex)
+            {
+                throw new OrionException("Can't create SQLite DataAdapter;", ex);
+            }
+        }// CreateDataAdapter()
+        #endregion
+
+        #region Public interface
+        public void SetPassword(String password, Boolean persistentConnection)
+        {
+            Byte[] byPasswordBytes;
+
+            if (this.Connection != null)
+            {
+                this.Connect();
+
+                if (String.IsNullOrWhiteSpace(password) == false)
+                {
+                    byPasswordBytes = new byte[password.Length * sizeof(char)];
+                    byPasswordBytes = System.Text.Encoding.Default.GetBytes(password);
+                    ((SQLiteConnection)this.Connection).ChangePassword(byPasswordBytes);
+                }
+                else
+                    ((SQLiteConnection)Connection).ChangePassword(String.Empty);
+
+                if (persistentConnection == false) this.Disconnect();
+            }
+        }// SetPassword()
         #endregion
 
         #region Utility procedures
