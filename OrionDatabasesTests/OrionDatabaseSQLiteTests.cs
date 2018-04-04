@@ -235,12 +235,162 @@ namespace OrionDatabasesTests
             xBase.Dispose();
         }// Miscellaneous_SetPassword_OkDisconnected()
         #endregion
+        #region Base creation tests
+        [TestMethod, TestCategory("OrionDatabaseSQLite")]
+        public void CreateBase_NullFilePath_OrionException()
+        {
+            OrionException xOrionException;
+
+            xOrionException = null;
+
+            try
+            {
+                OrionDatabaseSQLite.CreateDatabaseFile(null);
+            }
+            catch (OrionException ex)
+            {
+                xOrionException = ex;
+            }
+            Assert.IsNotNull(xOrionException);
+            Assert.AreEqual(xOrionException.Message, "The SQLite database file path can't be null or an empty string.");
+        }// CreateBase_NullFilePath_OrionException()
+        [TestMethod, TestCategory("OrionDatabaseSQLite")]
+        public void CreateBase_InvalidFilePath_XException()
+        {
+            String strTargetBaseFile;
+            OrionException xOrionException;
+
+            strTargetBaseFile = "c:\\|Datas.dtx";
+            xOrionException = null;
+
+            try
+            {
+                OrionDatabaseSQLite.CreateDatabaseFile(strTargetBaseFile);
+            }
+            catch (Exception ex)
+            {
+                xOrionException = ex as OrionException;
+            }
+            Assert.IsNotNull(xOrionException);
+            Assert.AreEqual(xOrionException.Message, "The database file path is invalid.");
+            Assert.IsInstanceOfType(xOrionException.InnerException, typeof(ArgumentException));
+            Assert.AreEqual(xOrionException.InnerException.Message, "Caractères non conformes dans le chemin d'accès.");
+            Assert.AreEqual(xOrionException.Data["DatabaseFilePath"], strTargetBaseFile);
+        }// CreateBase_InvalidFilePath_XException()
+        [TestMethod, TestCategory("OrionDatabaseSQLite")]
+        public void CreateBase_MissingDirectoryPath_XException()
+        {
+            String strTargetBaseFile;
+            OrionException xOrionException;
+
+            strTargetBaseFile = "z:\\Datas.dtx";
+            xOrionException = null;
+
+            try
+            {
+                OrionDatabaseSQLite.CreateDatabaseFile(strTargetBaseFile);
+            }
+            catch (Exception ex)
+            {
+                xOrionException = ex as OrionException;
+            }
+            Assert.IsNotNull(xOrionException);
+            Assert.AreEqual(xOrionException.Message, "The database directory path can't be found.");
+            Assert.AreEqual(xOrionException.Data["DatabaseFilePath"], strTargetBaseFile);
+        }// CreateBase_MissingDirectoryPath_XException()
+        [TestMethod, TestCategory("OrionDatabaseSQLite")]
+        public void CreateBase_ExistingFile_XException()
+        {
+            String strTargetBaseFilePath;
+            OrionException xOrionException;
+
+            strTargetBaseFilePath = Path.Combine(OrionDatabaseSQLiteTests.strTestsMiscellaneousDirectoryPath, "Create Database Existing File", OrionDatabaseSQLiteTests.strTESTBASEFILENAME);
+            xOrionException = null;
+
+            OrionDatabaseSQLiteTests.CheckTestDatabaseFile(strTargetBaseFilePath);
+
+            try
+            {
+                OrionDatabaseSQLite.CreateDatabaseFile(strTargetBaseFilePath);
+            }
+            catch (Exception ex)
+            {
+                xOrionException = ex as OrionException;
+            }
+            Assert.IsNotNull(xOrionException);
+            Assert.AreEqual(xOrionException.Message, "The specified SQLite database file already exists.");
+            Assert.AreEqual(xOrionException.Data["DatabaseFilePath"], strTargetBaseFilePath);
+        }// CreateBase_ExistingFile_XException()
+        [TestMethod, TestCategory("OrionDatabaseSQLite")]
+        public void CreateBase_Ok()
+        {
+            String strTargetBaseFilePath, strTargetBaseDirectoryPath;
+            OrionException xOrionException;
+            OrionDatabaseSQLite xBase;
+
+            strTargetBaseFilePath = Path.Combine(OrionDatabaseSQLiteTests.strTestsMiscellaneousDirectoryPath, "Create Database Ok", OrionDatabaseSQLiteTests.strTESTBASEFILENAME);
+            strTargetBaseDirectoryPath = Path.GetDirectoryName(strTargetBaseFilePath);
+            xOrionException = null;
+            xBase = null;
+
+            if (Directory.Exists(strTargetBaseDirectoryPath) == false) Directory.CreateDirectory(strTargetBaseDirectoryPath);
+            if (File.Exists(strTargetBaseFilePath) == true) File.Delete(strTargetBaseFilePath);
+
+            try
+            {
+                OrionDatabaseSQLite.CreateDatabaseFile(strTargetBaseFilePath);
+            }
+            catch (Exception ex)
+            {
+                xOrionException = ex as OrionException;
+            }
+            Assert.IsNull(xOrionException);
+
+            try
+            {
+                xBase = new OrionDatabaseSQLite(strTargetBaseFilePath);
+            }
+            catch (OrionException ex)
+            {
+                xOrionException = ex;
+            }
+            Assert.IsNull(xOrionException);
+
+            try
+            {
+                xBase.Connect();
+            }
+            catch (OrionException ex)
+            {
+                xOrionException = ex;
+            }
+            Assert.IsNull(xOrionException);
+            Assert.AreEqual(xBase.ConnectionState, ConnectionState.Open);
+
+            try
+            {
+                xBase.Disconnect();
+            }
+            catch (OrionException ex)
+            {
+                xOrionException = ex;
+            }
+            Assert.IsNull(xOrionException);
+            Assert.AreEqual(xBase.ConnectionState, ConnectionState.Closed);
+
+            if (xBase != null)
+            {
+                xBase.Dispose();
+                xBase = null;
+            }
+        }// CreateBase_Ok()
+        #endregion
         #endregion
 
         #region Utility procedures
         private static void CheckTestDatabaseFile(String targetBaseFilePath, Boolean password = false)
         {
-            String strSourceBaseFilePath;
+            String strSourceBaseFilePath, strTargetBaseDirectoryPath;
             Exception xException;
 
             xException = null;
@@ -249,6 +399,9 @@ namespace OrionDatabasesTests
                 strSourceBaseFilePath = Path.Combine(OrionDatabaseSQLiteTests.strSourceDirectoryPath, OrionDatabaseSQLiteTests.strSOURCENOPASSWORDBASEFILENAME);
             else
                 strSourceBaseFilePath = Path.Combine(OrionDatabaseSQLiteTests.strSourceDirectoryPath, OrionDatabaseSQLiteTests.strSOURCEPASSWORDBASEFILENAME);
+            strTargetBaseDirectoryPath = Path.GetDirectoryName(targetBaseFilePath);
+
+            if (Directory.Exists(strTargetBaseDirectoryPath) == false) Directory.CreateDirectory(strTargetBaseDirectoryPath);
 
             try
             {

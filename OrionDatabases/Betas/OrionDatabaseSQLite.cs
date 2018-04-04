@@ -102,6 +102,69 @@ namespace OrionDatabases
         #endregion
 
         #region Public interface
+        #region Public interface
+        /// <summary>
+        /// Creates a new SQLite database file if missing.
+        /// </summary>
+        /// <param name="databaseFilePath">Path of the new SQLite database file to create.</param>
+        /// <exception cref="OrionException">File already exists or database can't be created. <see cref="Exception.Data"/> dictionnary contains <i>DatabaseFilePath</i> key with provided file path as value.</exception>
+        /// <seealso cref="OrionException" />
+        static public void CreateDatabaseFile(String databaseFilePath)
+        {
+            OrionDatabaseSQLite.CreateDatabaseFile(databaseFilePath, null);
+        }// CreateDatabaseFile()
+        /// <summary>
+        /// Creates a new SQLite database file if missing.
+        /// </summary>
+        /// <param name="databaseFilePath">Path of the new SQLite database file to create.</param>
+        /// <param name="password">Password to set on database.</param>
+        /// <exception cref="OrionException">File already exists or database can't be created. <see cref="Exception.Data"/> dictionnary contains <i>DatabaseFilePath</i> key with provided file path as value.</exception>
+        /// <seealso cref="OrionException" />
+        //[System.Diagnostics.CodeAnalysis.SuppressMessage("Microsoft.Reliability", "CA2000:DisposeObjectsBeforeLosingScope", Justification = "N/A")]
+        static public void CreateDatabaseFile(String databaseFilePath, String password)
+        {
+            OrionDatabaseSQLite xBase;
+
+            xBase = null;
+
+            // Check if the database file path is not null, not an empty string, and valid.
+            OrionDatabaseSQLite.CheckPathValidity(databaseFilePath);
+
+            //** Check if the database file path indicates an existing file **
+            if (File.Exists(databaseFilePath) == false)
+            {
+                try
+                {
+                    SQLiteConnection.CreateFile(databaseFilePath);
+                }
+                catch (Exception ex)
+                {
+                    throw new OrionException("Database can't be created.", ex, "DatabaseFilePath=" + databaseFilePath);
+                }
+
+                //    try
+                //    {
+                //        xBase = new XDatabaseSQLite(databaseFilePath);
+                //    }
+                //    catch (XException ex)
+                //    {
+                //        throw new XException("Can't create XDatabaseSQLite object;", ex, "DatabaseFilePath=" + databaseFilePath);
+                //    }
+
+                //    if (String.IsNullOrWhiteSpace(password) == false)
+                //        try
+                //        {
+                //            xBase.SetPassword(password, false);
+                //        }
+                //        catch (Exception ex)
+                //        {
+                //            throw new XException("Password can't be set.", ex, "DatabaseFilePath=" + databaseFilePath);
+                //        }
+            }
+            else
+                throw new OrionException("The specified SQLite database file already exists.", "DatabaseFilePath=" + databaseFilePath);
+        }// CreateDatabaseFile()
+        #endregion
         public void SetPassword(String password, Boolean persistentConnection)
         {
             Byte[] byPasswordBytes;
@@ -125,7 +188,7 @@ namespace OrionDatabases
         #endregion
 
         #region Utility procedures
-        static private void CheckPathValidity(String databaseFilePath)
+        static private void CheckPathValidity(String databaseFilePath, Boolean mustExist = false)
         {
             String strDirectoryPath;
 
@@ -143,7 +206,7 @@ namespace OrionDatabases
                 }
 
                 if (Directory.Exists(strDirectoryPath) == false) throw new OrionException("The database directory path can't be found.", "DatabaseFilePath=" + databaseFilePath);
-                if (File.Exists(databaseFilePath) == false) throw new OrionException("The specified SQLite database file is missing.", "DatabaseFilePath=" + databaseFilePath);
+                if (mustExist == true && File.Exists(databaseFilePath) == false) throw new OrionException("The specified SQLite database file is missing.", "DatabaseFilePath=" + databaseFilePath);
             }
         }// CheckPathValidity()
         #endregion
