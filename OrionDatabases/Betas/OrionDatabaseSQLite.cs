@@ -3,6 +3,7 @@ using System.IO;
 using System.Data.Common;
 using System.Data.SQLite;
 using OrionCore.ErrorManagement;
+using OrionDatabases.Queries;
 
 namespace OrionDatabases
 {
@@ -68,7 +69,7 @@ namespace OrionDatabases
             this.ParameterCharacter = '@';
 
             //** Check if the database file path is valid and indicates an existing file **
-            OrionDatabaseSQLite.CheckPathValidity(databaseFilePath);
+            OrionDatabaseSQLite.CheckPathValidity(databaseFilePath, true);
 
             this.ConnectionStringBuilder = new SQLiteConnectionStringBuilder();
 
@@ -87,6 +88,29 @@ namespace OrionDatabases
         #endregion
 
         #region Base abstract class implementation
+        /// <exclude />
+        internal override DbCommand CreateCommand(String sqlQuery)
+        {
+            SQLiteCommand xCommand;
+
+            try
+            {
+                xCommand = new SQLiteCommand(sqlQuery, (SQLiteConnection)this.Connection);
+            }
+            catch (DbException ex)
+            {
+                throw new OrionException("Can't create SQLiteCommand;", ex, "SqlQuery=" + sqlQuery);
+            }
+
+            xCommand.Transaction = (SQLiteTransaction)this.Transaction;
+
+            return xCommand;
+        }// CreateCommand()
+        /// <exclude />
+        internal override DbParameter CreateParameter(String key, Object value)
+        {
+            return new SQLiteParameter(key, value);
+        }// CreateParameter();
         /// <exclude />
         internal override DbDataAdapter CreateDataAdapter(String sqlRequest)
         {
@@ -142,24 +166,24 @@ namespace OrionDatabases
                     throw new OrionException("Database can't be created.", ex, "DatabaseFilePath=" + databaseFilePath);
                 }
 
-                //    try
-                //    {
-                //        xBase = new XDatabaseSQLite(databaseFilePath);
-                //    }
-                //    catch (XException ex)
-                //    {
-                //        throw new XException("Can't create XDatabaseSQLite object;", ex, "DatabaseFilePath=" + databaseFilePath);
-                //    }
+                try
+                {
+                    xBase = new OrionDatabaseSQLite(databaseFilePath);
+                }
+                catch (OrionException ex)
+                {
+                    throw new OrionException("Can't create XDatabaseSQLite object;", ex, "DatabaseFilePath=" + databaseFilePath);
+                }
 
-                //    if (String.IsNullOrWhiteSpace(password) == false)
-                //        try
-                //        {
-                //            xBase.SetPassword(password, false);
-                //        }
-                //        catch (Exception ex)
-                //        {
-                //            throw new XException("Password can't be set.", ex, "DatabaseFilePath=" + databaseFilePath);
-                //        }
+                if (String.IsNullOrWhiteSpace(password) == false)
+                    try
+                    {
+                        xBase.SetPassword(password, false);
+                    }
+                    catch (Exception ex)
+                    {
+                        throw new OrionException("Password can't be set.", ex, "DatabaseFilePath=" + databaseFilePath);
+                    }
             }
             else
                 throw new OrionException("The specified SQLite database file already exists.", "DatabaseFilePath=" + databaseFilePath);

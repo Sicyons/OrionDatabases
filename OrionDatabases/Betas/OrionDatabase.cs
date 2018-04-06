@@ -129,10 +129,25 @@ namespace OrionDatabases
 
         #region Virtual and abstract interfaces
         /// <exclude />
+        internal abstract DbCommand CreateCommand(String xSqlRequest);
+        /// <exclude />
         internal abstract DbDataAdapter CreateDataAdapter(String sqlRequest);
+        /// <exclude />
+        internal abstract DbParameter CreateParameter(String key, Object value);
         #endregion
 
         #region Protected interface
+        static protected void CheckMissingDll(String dllFileName)
+        {
+            String strDllFilePath;
+
+            if (String.IsNullOrWhiteSpace(dllFileName) == false)
+            {
+                strDllFilePath = Path.Combine(OrionDeploymentInfos.DataFolder, dllFileName);
+                if (File.Exists(strDllFilePath) == false) throw new OrionException("Missing dll [" + dllFileName + "];", "DllFilePath=" + strDllFilePath);
+            }
+        }// CheckMissingDll()
+
         protected void Initialize()
         {
             this.xQueries = new ObservableCollection<OrionQuery>();
@@ -140,6 +155,36 @@ namespace OrionDatabases
         #endregion
 
         #region Public interface
+        /// <summary>
+        /// Commits the database pending transaction.
+        /// </summary>
+        /// <exception cref="OrionException">There is no active transaction, or the transaction has already been committed or rolled back or the connection is broken.</exception>
+        /// <seealso cref="OrionException" />
+        public void CommitTransaction()
+        {
+            if (this.Transaction != null)
+            {
+                try
+                {
+                    this.Transaction.Commit();
+                }
+                catch (DbException ex)
+                {
+                    throw new OrionException("Error while trying to commit transaction;", ex);
+                }
+
+                this.TransactionState = TransactionStates.Committed;
+
+                this.Transaction.Dispose();
+                this.Transaction = null;
+            }
+            else
+                throw new OrionException("No transaction has been started.");
+
+            this.xQueries.Clear();
+
+            if (this.Connection.State != ConnectionState.Closed && this.PersistentConnection == false) this.Disconnect();
+        }// CommitTransaction()
         /// <summary>
         /// Establishes a connection to the source database.
         /// </summary>
@@ -224,6 +269,173 @@ namespace OrionDatabases
             else
                 throw new OrionException("No connection has been initialized");
         }// Disconnect()
+        public OrionDeleteQuery PrepareQueryDelete(String tableName)
+        {
+            return this.PrepareQueryDelete(tableName, null);
+        }// PrepareQueryDelete()
+        public OrionDeleteQuery PrepareQueryDelete(String tableName, String whereClause)
+        {
+            Boolean bReplacePreviousQuery;
+            OrionDeleteQuery xNewQuery;
+
+            xNewQuery = null;
+
+            if (String.IsNullOrEmpty(tableName) == false)
+            {
+                bReplacePreviousQuery = true;
+
+                if (this.xQueries.Count != 0)
+                {
+                    if (this.CurrentQuery.Executed == false && this.CurrentQuery.Failed == false)
+                        throw new OrionException("Previous query has not been executed.");
+                    else if (this.TransactionState == TransactionStates.Started)
+                        bReplacePreviousQuery = false;
+                }
+
+                xNewQuery = new OrionDeleteQuery(this, tableName, whereClause);
+                if (xNewQuery != null)
+                {
+                    if (bReplacePreviousQuery == true) this.xQueries.Clear();
+                    this.xQueries.Add(xNewQuery);
+                }
+            }
+            else
+                throw new OrionException("Delete query needs a table name.");
+
+            return xNewQuery;
+        }// PrepareQueryDelete()
+        public OrionExecuteQuery PrepareQueryExecute(String queryString)
+        {
+            Boolean bReplacePreviousQuery;
+            OrionExecuteQuery xNewQuery;
+
+            if (String.IsNullOrEmpty(queryString) == false)
+            {
+                bReplacePreviousQuery = true;
+
+                if (this.xQueries.Count != 0)
+                {
+                    if (this.CurrentQuery.Executed == false && this.CurrentQuery.Failed == false)
+                        throw new OrionException("Previous query has not been executed.");
+                    else if (this.TransactionState == TransactionStates.Started)
+                        bReplacePreviousQuery = false;
+                }
+
+                xNewQuery = new OrionExecuteQuery(this, queryString);
+                if (xNewQuery != null)
+                {
+                    if (bReplacePreviousQuery == true) this.xQueries.Clear();
+                    this.xQueries.Add(xNewQuery);
+                }
+
+                return xNewQuery;
+            }
+            else
+                throw new OrionException("Query needs a query string to be initialized.");
+        }// PrepareQueryExecute()
+        public OrionRowCountQuery PrepareQueryRowCount(String tableName, String whereClause = null)
+        {
+            Boolean bReplacePreviousQuery;
+            OrionRowCountQuery xNewQuery;
+
+            xNewQuery = null;
+
+            if (String.IsNullOrEmpty(tableName) == false)
+            {
+                bReplacePreviousQuery = true;
+
+                if (this.xQueries.Count != 0)
+                {
+                    if (this.CurrentQuery.Executed == false && this.CurrentQuery.Failed == false)
+                        throw new OrionException("Previous query has not been executed.");
+                    else if (this.TransactionState == TransactionStates.Started)
+                        bReplacePreviousQuery = false;
+                }
+
+                xNewQuery = new OrionRowCountQuery(this, tableName, whereClause);
+                if (xNewQuery != null)
+                {
+                    if (bReplacePreviousQuery == true) this.xQueries.Clear();
+                    this.xQueries.Add(xNewQuery);
+                }
+            }
+            else
+                throw new OrionException("RowCount query needs a table name.");
+
+            return xNewQuery;
+        }// PrepareQueryRowCount()
+        public OrionInsertQuery PrepareQueryInsert(String tableName, params String[] fieldNames)
+        {
+            Boolean bReplacePreviousQuery;
+            OrionInsertQuery xNewQuery;
+
+            xNewQuery = null;
+
+            if (String.IsNullOrEmpty(tableName) == false)
+            {
+                if (fieldNames != null && fieldNames.Length > 0)
+                {
+                    bReplacePreviousQuery = true;
+
+                    if (this.xQueries.Count != 0)
+                    {
+                        if (this.CurrentQuery.Executed == false && this.CurrentQuery.Failed == false)
+                            throw new OrionException("Previous query has not been executed.");
+                        else if (this.TransactionState == TransactionStates.Started)
+                            bReplacePreviousQuery = false;
+                    }
+
+                    xNewQuery = new OrionInsertQuery(this, tableName, fieldNames);
+                    if (xNewQuery != null)
+                    {
+                        if (bReplacePreviousQuery == true) this.xQueries.Clear();
+                        this.xQueries.Add(xNewQuery);
+                    }
+                }
+                else
+                    throw new OrionException("Insert query needs field names.");
+            }
+            else
+                throw new OrionException("Insert query needs a table name.");
+
+            return xNewQuery;
+        }// PrepareQueryInsert()
+        public OrionInsertQuery PrepareQueryInsert(String tableName, DataRow sourceRow, params String[] exclusions)
+        {
+            Boolean bReplacePreviousQuery;
+            OrionInsertQuery xNewQuery;
+
+            xNewQuery = null;
+
+            if (String.IsNullOrEmpty(tableName) == false)
+            {
+                if (sourceRow != null)
+                {
+                    bReplacePreviousQuery = true;
+
+                    if (this.xQueries.Count != 0)
+                    {
+                        if (this.CurrentQuery.Executed == false && this.CurrentQuery.Failed == false)
+                            throw new OrionException("Previous query has not been executed.");
+                        else if (this.TransactionState == TransactionStates.Started)
+                            bReplacePreviousQuery = false;
+                    }
+
+                    xNewQuery = new OrionInsertQuery(this, tableName, sourceRow, exclusions);
+                    if (xNewQuery != null)
+                    {
+                        if (bReplacePreviousQuery == true) this.xQueries.Clear();
+                        this.xQueries.Add(xNewQuery);
+                    }
+                }
+                else
+                    throw new OrionException("Insert query needs a source DataRow.");
+            }
+            else
+                throw new OrionException("Insert query needs a table name.");
+
+            return xNewQuery;
+        }// PrepareQueryInsert() 
         public OrionSelectQuery PrepareQuerySelect(String queryString)
         {
             Boolean bReplacePreviousQuery;
@@ -253,6 +465,75 @@ namespace OrionDatabases
             else
                 throw new OrionException("Query needs a query string to be initialized.");
         }// PrepareQuerySelect()
+        public OrionUpdateQuery PrepareQueryUpdate(String tableName, String whereClause, params String[] fieldNames)
+        {
+            Boolean bReplacePreviousQuery;
+            OrionUpdateQuery xNewQuery;
+
+            xNewQuery = null;
+
+            if (String.IsNullOrEmpty(tableName) == false)
+            {
+                if (fieldNames != null && fieldNames.Length > 0)
+                {
+                    bReplacePreviousQuery = true;
+
+                    if (this.xQueries.Count != 0)
+                    {
+                        if (this.CurrentQuery.Executed == false && this.CurrentQuery.Failed == false)
+                            throw new OrionException("Previous query has not been executed.");
+                        else if (this.TransactionState == TransactionStates.Started)
+                            bReplacePreviousQuery = false;
+                    }
+
+                    xNewQuery = new OrionUpdateQuery(this, tableName, whereClause, fieldNames);
+                    if (xNewQuery != null)
+                    {
+                        if (bReplacePreviousQuery == true) this.xQueries.Clear();
+                        this.xQueries.Add(xNewQuery);
+                    }
+                }
+                else
+                    throw new OrionException("Update query needs field names.");
+            }
+            else
+                throw new OrionException("Update query needs a table name.");
+
+            return xNewQuery;
+        }// PrepareQueryUpdate()
+         /// <summary>
+         /// Creates and starts a new transaction.
+         /// </summary>
+         /// <remarks>Every following SQL request will be automatically enroled in this transaction. The whole transaction can be validated and executed by using the <see cref="CommitTransaction()" /> method.
+         /// <br />If a transaction is started and has not been committed, <see cref="RollbackTransaction()" /> method is called before disconnecting or disposing the <see cref="OrionDatabase" /> object.</remarks>
+         /// <exception cref="OrionException">A transaction has already been started.</exception>
+         /// <seealso cref="OrionException" />
+         /// <seealso cref="CommitTransaction()" />
+         /// <seealso cref="RollbackTransaction()" />
+        public void StartTransaction()
+        {
+            if (this.TransactionState != TransactionStates.Started)
+                if (this.xQueries.Count == 0 || this.CurrentQuery.Executed == true || this.CurrentQuery.Failed == true)
+                {
+                    if (this.Connection.State != ConnectionState.Open) this.Connect();
+
+                    try
+                    {
+                        this.Transaction = this.Connection.BeginTransaction();
+                    }
+                    catch (DbException ex)
+                    {
+                        throw new OrionException("DbConnection.BeginTransaction() can't be executed;", ex);
+                    }
+                    this.TransactionState = TransactionStates.Started;
+
+                    this.xQueries.Clear();
+                }
+                else
+                    throw new OrionException("No transaction can be started if a query has already been initialized.");
+            else
+                throw new OrionException("A transaction has always been started.");
+        }// StartTransaction()
         /// <summary>
         /// Rolls back a transaction from a pending state.
         /// </summary>
@@ -285,19 +566,6 @@ namespace OrionDatabases
 
             if (this.Connection.State != ConnectionState.Closed && this.PersistentConnection == false) this.Disconnect();
         }// RollbackTransaction()
-        #endregion
-
-        #region Protected interface
-        protected static void CheckMissingDll(String dllFileName)
-        {
-            String strDllFilePath;
-
-            if (String.IsNullOrWhiteSpace(dllFileName) == false)
-            {
-                strDllFilePath = Path.Combine(OrionDeploymentInfos.DataFolder, dllFileName);
-                if (File.Exists(strDllFilePath) == false) throw new OrionException("Missing dll [" + dllFileName + "];", "DllFilePath=" + strDllFilePath);
-            }
-        }// CheckMissingDll()
         #endregion
 
         #region Utility procedures

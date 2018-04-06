@@ -66,8 +66,13 @@
     <Compile Include="Betas\Enumerations.cs" />
     <Compile Include="Betas\OrionDatabase.cs" />
     <Compile Include="Betas\OrionDatabaseSQLite.cs" />
+    <Compile Include="Betas\Queries\OrionDeleteQuery.cs" />
+    <Compile Include="Betas\Queries\OrionInsertQuery.cs" />
     <Compile Include="Betas\Queries\OrionQuery.cs" />
+    <Compile Include="Betas\Queries\OrionRowCountQuery.cs" />
+    <Compile Include="Betas\Queries\OrionExecuteQuery.cs" />
     <Compile Include="Betas\Queries\OrionSelectQuery.cs" />
+    <Compile Include="Betas\Queries\OrionUpdateQuery.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
   </ItemGroup>
   <ItemGroup>

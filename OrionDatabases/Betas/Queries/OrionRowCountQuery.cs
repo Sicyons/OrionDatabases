@@ -1,43 +1,18 @@
 ﻿using System;
 using System.Data;
+using System.Text;
 using System.Data.Common;
 using OrionCore.ErrorManagement;
 
 namespace OrionDatabases.Queries
 {
-    public class OrionSelectQuery : OrionQuery
+    public class OrionRowCountQuery : OrionQuery
     {
         #region Fields
         private DbDataAdapter xDataAdapter;
         #endregion
 
-        #region Constructors
-        internal OrionSelectQuery(OrionDatabase parentXDatabase, String queryString)
-            : base(parentXDatabase)
-        {
-            String[] strQueryElements;
-
-            strQueryElements = queryString.Split(' ');
-            if (strQueryElements.Length == 1)
-                // Whole table content loading.
-                this.QueryString = "SELECT * FROM " + strQueryElements[0].Trim();
-            else
-            {
-                if (queryString.StartsWith("SELECT", StringComparison.CurrentCultureIgnoreCase) == true)
-                    this.QueryString = queryString;
-                else
-                    throw new OrionException("The SQL query is not a valid SELECT one;");
-            }
-
-            this.QueryType = QueryTypes.Select;
-
-            if (this.xDataAdapter == null) this.xDataAdapter = this.ParentOrionDatabase.CreateDataAdapter(this.QueryString);
-            this.xDataAdapter.MissingMappingAction = MissingMappingAction.Passthrough;
-            this.xDataAdapter.SelectCommand.Transaction = this.ParentOrionDatabase.Transaction;
-        }// OrionSelectQuery()
-        #endregion
-
-        #region Parent interface implementation
+        #region Properties
         internal override DbCommand SQLCommand
         {
             get
@@ -45,12 +20,39 @@ namespace OrionDatabases.Queries
                 return this.xDataAdapter.SelectCommand;
             }
         }
+        #endregion
 
+        #region Constructors
+        internal OrionRowCountQuery(OrionDatabase parentXDatabase, String tableName, String whereClause = null)
+            : base(parentXDatabase)
+        {
+            StringBuilder strQueryString;
+
+            this.QueryType = QueryTypes.RowCount;
+
+            strQueryString = new StringBuilder("SELECT COUNT(*) FROM " + tableName);
+
+            if (String.IsNullOrWhiteSpace(whereClause) == false)
+            {
+                whereClause = OrionQuery.TrimWhereClause(whereClause);
+                strQueryString.Append(" WHERE " + whereClause);
+            }
+            this.QueryString = strQueryString.ToString();
+
+            if (this.xDataAdapter == null) this.xDataAdapter = this.ParentOrionDatabase.CreateDataAdapter(this.QueryString);
+            this.xDataAdapter.MissingMappingAction = MissingMappingAction.Passthrough;
+            this.xDataAdapter.SelectCommand.Transaction = this.ParentOrionDatabase.Transaction;
+        }// OrionRowCountQuery
+        #endregion
+
+        #region Parent interface implementation
         public override Object Execute()
         {
+            Int64 lRowCount;
             DataTable xResultTable;
             Exception xException;
 
+            lRowCount = 0L;
             xException = null;
 
             using (xResultTable = new DataTable())
@@ -76,22 +78,25 @@ namespace OrionDatabases.Queries
                     xException = ex;
                 }
 
+
                 if (this.ParentOrionDatabase.PersistentConnection == false && this.ParentOrionDatabase.TransactionState != TransactionStates.Started)
                     this.ParentOrionDatabase.Disconnect();
 
                 if (xException == null)
-                {
                     this.Executed = true;
-
-                    return xResultTable;
-                }
                 else
                 {
                     this.Failed = true;
 
                     throw new OrionException("Can't execute DbDataAdapter.Fill(DataTable);", xException, "SqlQuery=" + this.QueryString);
                 }
+
+                if (xResultTable.Rows.Count > 0 && xResultTable.Rows[0][0] is DBNull == false)
+                    if (Int64.TryParse(xResultTable.Rows[0][0].ToString(), System.Globalization.NumberStyles.Integer, System.Globalization.CultureInfo.CurrentCulture, out lRowCount) == false)
+                        lRowCount = 0L;
             }
+
+            return lRowCount;
         }// Execute()
         #endregion
     }
