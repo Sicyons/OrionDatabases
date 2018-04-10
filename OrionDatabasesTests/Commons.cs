@@ -67,7 +67,7 @@ namespace OrionDatabasesTests
             {
                 xLocalOrionDatabase = new OrionDatabaseSQLite(Path.Combine(OrionDeploymentInfos.DataFolder, "OrionDatabaseSqliteTests", "Source", OrionDatabaseSQLiteTests.strSOURCENOPASSWORDBASEFILENAME));
 
-                Commons.PopulateTable(xLocalOrionDatabase, "T_XDatabases_Tests", true);
+                Commons.PopulateTable(xLocalOrionDatabase, "T_OrionDatabases_Tests", true);
             }
             catch (OrionException ex)
             {

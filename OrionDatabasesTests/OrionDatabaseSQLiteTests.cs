@@ -126,6 +126,15 @@ namespace OrionDatabasesTests
                 if (Directory.Exists(strTargetDirectoryPath) == false) Directory.CreateDirectory(strTargetDirectoryPath);
                 strTargetDirectoryPath = Path.Combine(OrionDatabaseSQLiteTests.strTestsNoPasswordDirectoryPath, "Transactions", "OK");
                 if (Directory.Exists(strTargetDirectoryPath) == false) Directory.CreateDirectory(strTargetDirectoryPath);
+
+                //** Password. **
+                if (Directory.Exists(OrionDatabaseSQLiteTests.strTestsPasswordDirectoryPath) == false) Directory.CreateDirectory(OrionDatabaseSQLiteTests.strTestsPasswordDirectoryPath);
+                strDirectoryNames = new String[] { "Missing Database", "Create Database", "Initialize Database", "Connect Database" };
+                foreach (String strDirectoryNameTemp in strDirectoryNames)
+                {
+                    strTargetDirectoryPath = Path.Combine(OrionDatabaseSQLiteTests.strTestsPasswordDirectoryPath, strDirectoryNameTemp);
+                    if (Directory.Exists(strTargetDirectoryPath) == false) Directory.CreateDirectory(strTargetDirectoryPath);
+                }
             }
             catch (Exception ex)
             {
@@ -507,8 +516,7 @@ namespace OrionDatabasesTests
         }// InitializeBase_MissingDatabaseFile_XException()
         #endregion
 
-        #region No password
-        #region Initializations
+        #region No Password Initializations
         [TestMethod, TestCategory("OrionDatabaseSQLite")]
         public void NoPassword_CreateBase_ValidFilePath_IsCreated()
         {
@@ -572,14 +580,16 @@ namespace OrionDatabasesTests
         public void NoPassword_ConnectBase_ValidInformations_ConnectedDisconnected()
         {
             String strTargetBaseFilePath;
+            DataTable xResults;
             OrionException xOrionException;
             OrionDatabaseSQLite xBase;
 
             strTargetBaseFilePath = Path.Combine(OrionDatabaseSQLiteTests.strTestsNoPasswordDirectoryPath, "Connect Database", OrionDatabaseSQLiteTests.strTESTBASEFILENAME);
+            xResults = null;
             xOrionException = null;
             xBase = null;
 
-            OrionDatabaseSQLiteTests.CheckTestDatabaseFile(strTargetBaseFilePath, true);
+            OrionDatabaseSQLiteTests.CheckTestDatabaseFile(strTargetBaseFilePath);
 
             try
             {
@@ -596,6 +606,20 @@ namespace OrionDatabasesTests
 
             try
             {
+                OrionSelectQuery xQuery = xBase.PrepareQuerySelect("T_OrionDatabases_Tests");
+                xResults = (DataTable)xQuery.Execute();
+            }
+            catch (OrionException ex)
+            {
+                xBase.Dispose();
+                xOrionException = ex as OrionException;
+            }
+            Assert.IsNull(xOrionException);
+            Assert.IsNotNull(xResults);
+            Assert.AreEqual(xResults.Rows.Count, 12);
+
+            try
+            {
                 xBase.Disconnect();
             }
             catch (OrionException ex)
@@ -608,6 +632,115 @@ namespace OrionDatabasesTests
 
             if (xBase != null) xBase.Dispose();
         }// NoPassword_ConnectBase_ValidInformations_ConnectedDisconnected()
+        #endregion
+
+        #region Password initializations
+        [TestMethod, TestCategory("OrionDatabaseSQLite")]
+        public void Password_CreateBase_ValidFilePath_IsCreated()
+        {
+            String strTargetBaseFilePath;
+            Exception xException;
+            OrionException xOrionException;
+
+            strTargetBaseFilePath = Path.Combine(OrionDatabaseSQLiteTests.strTestsPasswordDirectoryPath, "Create Database", OrionDatabaseSQLiteTests.strTESTBASEFILENAME);
+            xException = null;
+            xOrionException = null;
+
+            try
+            {
+                if (File.Exists(strTargetBaseFilePath) == true) File.Delete(strTargetBaseFilePath);
+            }
+            catch (Exception ex)
+            {
+                xException = ex;
+            }
+            Assert.IsNull(xException, "Can't delete existing test database file;");
+
+            try
+            {
+                OrionDatabaseSQLite.CreateDatabaseFile(strTargetBaseFilePath, OrionDatabaseSQLiteTests.strPASSWORD);
+            }
+            catch (Exception ex)
+            {
+                xOrionException = ex as OrionException;
+            }
+            Assert.IsNull(xOrionException);
+            Assert.IsTrue(File.Exists(strTargetBaseFilePath));
+        }// Password_CreateBase_ValidFilePath_IsCreated()
+        [TestMethod, TestCategory("OrionDatabaseSQLite")]
+        public void Password_InitializeBase_ValidFilePath_Ok()
+        {
+            String strTargetBaseFilePath;
+            OrionException xOrionException;
+            OrionDatabaseSQLite xBase;
+
+            strTargetBaseFilePath = Path.Combine(OrionDatabaseSQLiteTests.strTestsPasswordDirectoryPath, "Initialize Database", OrionDatabaseSQLiteTests.strTESTBASEFILENAME);
+            xOrionException = null;
+            xBase = null;
+
+            OrionDatabaseSQLiteTests.CheckTestDatabaseFile(strTargetBaseFilePath);
+
+            try
+            {
+                xBase = new OrionDatabaseSQLite(strTargetBaseFilePath, OrionDatabaseSQLiteTests.strPASSWORD);
+            }
+            catch (Exception ex)
+            {
+                xBase.Dispose();
+                xOrionException = ex as OrionException;
+            }
+            Assert.IsNull(xOrionException);
+            Assert.AreEqual(xBase.ConnectionState, ConnectionState.Closed);
+
+            xBase.Dispose();
+        }// Password_InitializeBase_ValidFilePath_Ok()  
+        [TestMethod, TestCategory("OrionDatabaseSQLite")]
+        public void Password_ConnectBase_ValidInformations_ConnectedDisconnected()
+        {
+            String strTargetBaseFilePath;
+            DataTable xResults;
+            OrionException xOrionException;
+            OrionDatabaseSQLite xBase;
+
+            strTargetBaseFilePath = Path.Combine(OrionDatabaseSQLiteTests.strTestsPasswordDirectoryPath, "Connect Database", OrionDatabaseSQLiteTests.strTESTBASEFILENAME);
+            xResults = null;
+            xOrionException = null;
+            xBase = null;
+
+            OrionDatabaseSQLiteTests.CheckTestDatabaseFile(strTargetBaseFilePath, true);
+
+            try
+            {
+                xBase = new OrionDatabaseSQLite(strTargetBaseFilePath, OrionDatabaseSQLiteTests.strPASSWORD);
+                xBase.Connect();
+            }
+            catch (OrionException ex)
+            {
+                xBase.Dispose();
+                xOrionException = ex as OrionException;
+            }
+            Assert.IsNull(xOrionException);
+            Assert.AreEqual(xBase.ConnectionState, ConnectionState.Open);
+
+            try
+            {
+                xBase.StartTransaction();
+                OrionSelectQuery xQuery = xBase.PrepareQuerySelect("T_OrionDatabases_Tests");
+                xResults = (DataTable)xQuery.Execute();
+                xBase.CommitTransaction();
+            }
+            catch (OrionException ex)
+            {
+                xBase.Dispose();
+                xOrionException = ex as OrionException;
+            }
+            Assert.IsNull(xOrionException);
+            Assert.IsNotNull(xResults);
+            Assert.AreEqual(xResults.Rows.Count, 12);
+            Assert.AreEqual(xBase.ConnectionState, ConnectionState.Closed);
+
+            if (xBase != null) xBase.Dispose();
+        }// Password_ConnectBase_ValidInformations_ConnectedDisconnected()
         #endregion
 
         #region Delete queries
@@ -720,7 +853,7 @@ namespace OrionDatabasesTests
 
             try
             {
-                lRowCount = (Int64)xBase.PrepareQueryRowCount("T_XDatabases_Tests").Execute();
+                lRowCount = (Int64)xBase.PrepareQueryRowCount("T_OrionDatabases_Tests").Execute();
             }
             catch (OrionException ex)
             {
@@ -733,7 +866,7 @@ namespace OrionDatabasesTests
 
             try
             {
-                iChangedRows = (Int32)xBase.PrepareQueryDelete("T_XDatabases_Tests").Execute();
+                iChangedRows = (Int32)xBase.PrepareQueryDelete("T_OrionDatabases_Tests").Execute();
             }
             catch (OrionException ex)
             {
@@ -746,7 +879,7 @@ namespace OrionDatabasesTests
 
             try
             {
-                lRowCount = (Int64)xBase.PrepareQueryRowCount("T_XDatabases_Tests").Execute();
+                lRowCount = (Int64)xBase.PrepareQueryRowCount("T_OrionDatabases_Tests").Execute();
             }
             catch (OrionException ex)
             {
@@ -795,7 +928,7 @@ namespace OrionDatabasesTests
 
             try
             {
-                xRowCountQuery = xBase.PrepareQueryRowCount("T_XDatabases_Tests");
+                xRowCountQuery = xBase.PrepareQueryRowCount("T_OrionDatabases_Tests");
                 lRowCount = (Int64)xRowCountQuery.Execute();
             }
             catch (OrionException ex)
@@ -809,7 +942,7 @@ namespace OrionDatabasesTests
 
             try
             {
-                xInsertQuery = xBase.PrepareQueryInsert("T_XDatabases_Tests", "Id", "Titre", "Nationalite", "titre_Original");
+                xInsertQuery = xBase.PrepareQueryInsert("T_OrionDatabases_Tests", "Id", "Titre", "Nationalite", "titre_Original");
                 xInsertQuery["Id"] = 666;
                 xInsertQuery["Titre"] = "Les Charlots Contre Dracula";
                 xInsertQuery["Nationalite"] = "FR";
@@ -840,7 +973,7 @@ namespace OrionDatabasesTests
 
             try
             {
-                xDeleteQuery = xBase.PrepareQueryDelete("T_XDatabases_Tests", "Id=@idvalue");
+                xDeleteQuery = xBase.PrepareQueryDelete("T_OrionDatabases_Tests", "Id=@idvalue");
                 xDeleteQuery.AddParameter("idvalue", 666);
                 iChangedRows = (Int32)xDeleteQuery.Execute();
             }
@@ -978,7 +1111,7 @@ namespace OrionDatabasesTests
 
             try
             {
-                xResults = (DataTable)xBase.PrepareQuerySelect("SELECT * FROM T_XDatabases_Tests WHERE Nationalite='FR';").Execute();
+                xResults = (DataTable)xBase.PrepareQuerySelect("SELECT * FROM T_OrionDatabases_Tests WHERE Nationalite='FR';").Execute();
             }
             catch (OrionException ex)
             {
@@ -991,7 +1124,7 @@ namespace OrionDatabasesTests
 
             try
             {
-                xBase.PrepareQueryExecute("DELETE FROM T_XDatabases_Tests WHERE Titre='La Haine';").Execute();
+                xBase.PrepareQueryExecute("DELETE FROM T_OrionDatabases_Tests WHERE Titre='La Haine';").Execute();
             }
             catch (OrionException ex)
             {
@@ -1002,7 +1135,7 @@ namespace OrionDatabasesTests
             try
             {
                 xBase.PersistentConnection = false;
-                xResults = (DataTable)xBase.PrepareQuerySelect("SELECT * FROM T_XDatabases_Tests WHERE Nationalite='FR';").Execute();
+                xResults = (DataTable)xBase.PrepareQuerySelect("SELECT * FROM T_OrionDatabases_Tests WHERE Nationalite='FR';").Execute();
             }
             catch (OrionException ex)
             {
@@ -1216,7 +1349,7 @@ namespace OrionDatabasesTests
 
             try
             {
-                xRowCountQuery = xBase.PrepareQueryRowCount("T_XDatabases_Tests");
+                xRowCountQuery = xBase.PrepareQueryRowCount("T_OrionDatabases_Tests");
                 lRowCount = (Int64)xRowCountQuery.Execute();
             }
             catch (OrionException ex)
@@ -1229,7 +1362,7 @@ namespace OrionDatabasesTests
 
             try
             {
-                xResults = (DataTable)xBase.PrepareQuerySelect("SELECT * FROM T_XDatabases_Tests WHERE Id=-1").Execute();
+                xResults = (DataTable)xBase.PrepareQuerySelect("SELECT * FROM T_OrionDatabases_Tests WHERE Id=-1").Execute();
             }
             catch (OrionException ex)
             {
@@ -1248,7 +1381,7 @@ namespace OrionDatabasesTests
                 xNewRowTemp["Titre_Original"] = "Les Charlots Contre Dracula";
                 xResults.Rows.Add(xNewRowTemp);
 
-                iChangedRows = (Int32)xBase.PrepareQueryInsert("T_XDatabases_Tests", xNewRowTemp).Execute();
+                iChangedRows = (Int32)xBase.PrepareQueryInsert("T_OrionDatabases_Tests", xNewRowTemp).Execute();
             }
             catch (OrionException ex)
             {
@@ -1274,7 +1407,7 @@ namespace OrionDatabasesTests
 
             try
             {
-                xDeleteQuery = xBase.PrepareQueryDelete("T_XDatabases_Tests", "Id>=@param1");
+                xDeleteQuery = xBase.PrepareQueryDelete("T_OrionDatabases_Tests", "Id>=@param1");
                 xDeleteQuery.AddParameter("Param1", 666);
                 xDeleteQuery.Execute();
             }
@@ -1338,7 +1471,7 @@ namespace OrionDatabasesTests
 
             try
             {
-                xRowCountQuery = xBase.PrepareQueryRowCount("T_XDatabases_Tests");
+                xRowCountQuery = xBase.PrepareQueryRowCount("T_OrionDatabases_Tests");
                 lRowCount = (Int64)xRowCountQuery.Execute();
             }
             catch (OrionException ex)
@@ -1351,7 +1484,7 @@ namespace OrionDatabasesTests
 
             try
             {
-                xInsertQuery = xBase.PrepareQueryInsert("T_XDatabases_Tests", "Id", "Titre", "Nationalite", "Titre_Original");
+                xInsertQuery = xBase.PrepareQueryInsert("T_OrionDatabases_Tests", "Id", "Titre", "Nationalite", "Titre_Original");
                 xInsertQuery["Id"] = 666;
                 xInsertQuery["Titre"] = "Les Charlots Contre Dracula";
                 xInsertQuery["Nationalite"] = "FR";
@@ -1383,7 +1516,7 @@ namespace OrionDatabasesTests
 
             try
             {
-                xDeleteQuery = xBase.PrepareQueryDelete("T_XDatabases_Tests", "Id>=@param1");
+                xDeleteQuery = xBase.PrepareQueryDelete("T_OrionDatabases_Tests", "Id>=@param1");
                 xDeleteQuery.AddParameter("Param1", 666);
                 xDeleteQuery.Execute();
             }
@@ -1520,7 +1653,7 @@ namespace OrionDatabasesTests
 
             try
             {
-                xQuery = xBase.PrepareQueryRowCount("T_XDatabases_Tests", "Nationalite=@param1");
+                xQuery = xBase.PrepareQueryRowCount("T_OrionDatabases_Tests", "Nationalite=@param1");
                 xQuery.AddParameter("Param1", "FR");
                 lRowCount = (Int64)xQuery.Execute();
             }
@@ -1563,7 +1696,7 @@ namespace OrionDatabasesTests
 
             try
             {
-                lRowCount = (Int64)xBase.PrepareQueryRowCount("T_XDatabases_Tests").Execute();
+                lRowCount = (Int64)xBase.PrepareQueryRowCount("T_OrionDatabases_Tests").Execute();
             }
             catch (OrionException ex)
             {
@@ -1882,7 +2015,7 @@ namespace OrionDatabasesTests
 
             try
             {
-                xResults = (DataTable)xBase.PrepareQuerySelect("SELECT * FROM T_XDatabases_Tests WHERE Nationalite='FR';").Execute();
+                xResults = (DataTable)xBase.PrepareQuerySelect("SELECT * FROM T_OrionDatabases_Tests WHERE Nationalite='FR';").Execute();
             }
             catch (OrionException ex)
             {
@@ -1896,7 +2029,7 @@ namespace OrionDatabasesTests
             try
             {
                 xBase.StartTransaction();
-                xBase.PrepareQueryExecute("DELETE FROM T_XDatabases_Tests WHERE Titre='La Haine';").Execute();
+                xBase.PrepareQueryExecute("DELETE FROM T_OrionDatabases_Tests WHERE Titre='La Haine';").Execute();
             }
             catch (OrionException ex)
             {
@@ -1906,7 +2039,7 @@ namespace OrionDatabasesTests
 
             try
             {
-                xBase.PrepareQueryExecute("DELETE FROM T_XDatabases_Tests WHERE Titre='Léon';").Execute();
+                xBase.PrepareQueryExecute("DELETE FROM T_OrionDatabases_Tests WHERE Titre='Léon';").Execute();
             }
             catch (OrionException ex)
             {
@@ -1927,7 +2060,7 @@ namespace OrionDatabasesTests
             try
             {
                 xBase.PersistentConnection = false;
-                xResults = (DataTable)xBase.PrepareQuerySelect("SELECT * FROM T_XDatabases_Tests WHERE Nationalite='FR';").Execute();
+                xResults = (DataTable)xBase.PrepareQuerySelect("SELECT * FROM T_OrionDatabases_Tests WHERE Nationalite='FR';").Execute();
             }
             catch (OrionException ex)
             {
@@ -2008,7 +2141,7 @@ namespace OrionDatabasesTests
 
             try
             {
-                xBase.PrepareQueryUpdate("T_XDatabases_Tests", "Id=@Param1", null);
+                xBase.PrepareQueryUpdate("T_OrionDatabases_Tests", "Id=@Param1", null);
             }
             catch (OrionException ex)
             {
@@ -2096,7 +2229,7 @@ namespace OrionDatabasesTests
 
             try
             {
-                Commons.PopulateTable(xBase, "T_XDatabases_Tests", true);
+                Commons.PopulateTable(xBase, "T_OrionDatabases_Tests", true);
             }
             catch (OrionException ex)
             {
@@ -2108,7 +2241,7 @@ namespace OrionDatabasesTests
 
             try
             {
-                xSelectQuery = xBase.PrepareQuerySelect("SELECT * FROM T_XDatabases_Tests WHERE Id=@Param1");
+                xSelectQuery = xBase.PrepareQuerySelect("SELECT * FROM T_OrionDatabases_Tests WHERE Id=@Param1");
                 xSelectQuery.AddParameter("Param1", 2);
                 xResults = (DataTable)xSelectQuery.Execute();
             }
@@ -2123,7 +2256,7 @@ namespace OrionDatabasesTests
 
             try
             {
-                xUpdateQuery = xBase.PrepareQueryUpdate("T_XDatabases_Tests", "Id=@Param1", "Id");
+                xUpdateQuery = xBase.PrepareQueryUpdate("T_OrionDatabases_Tests", "Id=@Param1", "Id");
                 xUpdateQuery.AddParameter("Param1", 2);
                 xUpdateQuery["Id"] = 666;
                 iChangedRows = (Int32)xUpdateQuery.Execute();
@@ -2154,7 +2287,7 @@ namespace OrionDatabasesTests
             try
             {
                 iChangedRows = 0;
-                xUpdateQuery = xBase.PrepareQueryUpdate("T_XDatabases_Tests", "Id=@Param1", "Id");
+                xUpdateQuery = xBase.PrepareQueryUpdate("T_OrionDatabases_Tests", "Id=@Param1", "Id");
                 xUpdateQuery.AddParameter("Param1", 666);
                 xUpdateQuery["Id"] = 2;
                 iChangedRows = (Int32)xUpdateQuery.Execute();
@@ -2184,7 +2317,6 @@ namespace OrionDatabasesTests
 
             xBase.Dispose();
         }// NoPassword_Update_Row_Ok()
-        #endregion
         #endregion
         #endregion
 
