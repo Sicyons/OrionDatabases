@@ -19,6 +19,7 @@ namespace OrionDatabases
     {
         #region Fields
         private Boolean bDisposed;
+        private String strLogCommentFieldName1, strLogCommentFieldName2, strLogCommentFieldName3, strLogContextFieldName, strLogDateFieldName, strLogTableName;
         private ObservableCollection<OrionQuery> xQueries;
         #endregion
 
@@ -269,6 +270,15 @@ namespace OrionDatabases
             else
                 throw new OrionException("No connection has been initialized");
         }// Disconnect()
+        public void InitLogs(String tableName = "T_Logs", String dateFieldName = "CreationDate", String contextFieldName = "Context", String commentFieldName1 = "Comment", String commentFieldName2 = null, String commentFieldName3 = null)
+        {
+            this.strLogTableName = tableName;
+            this.strLogDateFieldName = dateFieldName;
+            this.strLogContextFieldName = contextFieldName;
+            this.strLogCommentFieldName1 = commentFieldName1;
+            this.strLogCommentFieldName2 = commentFieldName2;
+            this.strLogCommentFieldName3 = commentFieldName3;
+        }// InitLogs()
         public OrionDeleteQuery PrepareQueryDelete(String tableName)
         {
             return this.PrepareQueryDelete(tableName, null);

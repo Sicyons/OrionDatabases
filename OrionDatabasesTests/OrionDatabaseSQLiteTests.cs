@@ -61,6 +61,16 @@ namespace OrionDatabasesTests
                     if (Directory.Exists(strTargetDirectoryPath) == false) Directory.CreateDirectory(strTargetDirectoryPath);
                 }
 
+                //** No Password Logs. **
+                strTargetDirectoryPath = Path.Combine(OrionDatabaseSQLiteTests.strTestsNoPasswordDirectoryPath, "Logs");
+                if (Directory.Exists(strTargetDirectoryPath) == false) Directory.CreateDirectory(strTargetDirectoryPath);
+                strDirectoryNames = new String[] { "Initialization" };
+                foreach (String strDirectoryNameTemp in strDirectoryNames)
+                {
+                    strTargetDirectoryPath = Path.Combine(OrionDatabaseSQLiteTests.strTestsNoPasswordDirectoryPath, "Logs", strDirectoryNameTemp);
+                    if (Directory.Exists(strTargetDirectoryPath) == false) Directory.CreateDirectory(strTargetDirectoryPath);
+                }
+
                 //** No Password DELETE queries. **
                 strTargetDirectoryPath = Path.Combine(OrionDatabaseSQLiteTests.strTestsNoPasswordDirectoryPath, "Delete Queries");
                 if (Directory.Exists(strTargetDirectoryPath) == false) Directory.CreateDirectory(strTargetDirectoryPath);
@@ -376,6 +386,35 @@ namespace OrionDatabasesTests
             Assert.IsTrue(bResult);
             Assert.AreEqual(xBase.ConnectionState, ConnectionState.Closed);
         }// NoPassword_TableExists_Ok()
+        #endregion
+
+        #region Logs
+        [TestMethod, TestCategory("OrionDatabaseSQLite")]
+        public void NoPassword_Logs_Initialization()
+        {
+            String strTargetBaseFilePath;
+            OrionException xOrionException;
+            OrionDatabaseSQLite xBase;
+
+            strTargetBaseFilePath = Path.Combine(OrionDatabaseSQLiteTests.strTestsNoPasswordDirectoryPath, "Logs", "Initialization", OrionDatabaseSQLiteTests.strTESTBASEFILENAME);
+            xOrionException = null;
+            xBase = null;
+
+            OrionDatabaseSQLiteTests.CheckTestDatabaseFile(strTargetBaseFilePath);
+
+            try
+            {
+                xBase = new OrionDatabaseSQLite(strTargetBaseFilePath);
+            }
+            catch (OrionException ex)
+            {
+                xOrionException = ex as OrionException;
+            }
+            Assert.IsNull(xOrionException);
+            Assert.AreEqual(xBase.ConnectionState, ConnectionState.Closed);
+
+            xBase.InitLogs();
+        }// NoPassword_Logs_Initialization()
         #endregion
 
         #region Base creation tests
