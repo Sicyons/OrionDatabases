@@ -126,7 +126,6 @@ namespace OrionDatabases
         #endregion
 
         #region Public interface
-        #region Public interface
         /// <summary>
         /// Creates a new SQLite database file if missing.
         /// </summary>
@@ -188,7 +187,7 @@ namespace OrionDatabases
             else
                 throw new OrionException("The specified SQLite database file already exists.", "DatabaseFilePath=" + databaseFilePath);
         }// CreateDatabaseFile()
-        #endregion
+
         public void SetPassword(String password, Boolean persistentConnection)
         {
             Byte[] byPasswordBytes;

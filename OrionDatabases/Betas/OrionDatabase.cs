@@ -566,6 +566,28 @@ namespace OrionDatabases
 
             if (this.Connection.State != ConnectionState.Closed && this.PersistentConnection == false) this.Disconnect();
         }// RollbackTransaction()
+        /// <summary>
+        /// Search for table in database.
+        /// </summary>
+        /// <param name="tableName">Name of the table to find.</param>
+        /// <returns><i>True</i> if table exists.</returns>
+        public Boolean TableExits(String tableName)
+        {
+            DataTable xResults;
+            OrionSelectQuery xQuery;
+
+            try
+            {
+                xQuery = this.PrepareQuerySelect("SELECT name FROM sqlite_master WHERE type='table' AND name='" + tableName + "'");
+                xResults = (DataTable)xQuery.Execute();
+            }
+            catch (OrionException ex)
+            {
+                throw new OrionException("Can't read sqlite_master table in order to search for '" + tableName + "' table;", ex);
+            }
+
+            return xResults != null && xResults.Rows.Count > 0 ? true : false;
+        }// TableExits()
         #endregion
 
         #region Utility procedures

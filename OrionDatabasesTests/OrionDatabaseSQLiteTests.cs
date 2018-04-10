@@ -324,6 +324,58 @@ namespace OrionDatabasesTests
 
             if (xBase != null) xBase.Dispose();
         }// Miscellaneous_SetPassword_OkDisconnected()
+        [TestMethod, TestCategory("OrionDatabaseSQLite")]
+        public void NoPassword_TableExists_Ok()
+        {
+            Boolean bResult;
+            String strTargetBaseFilePath;
+            OrionException xOrionException;
+            OrionDatabaseSQLite xBase;
+
+            bResult = false;
+            strTargetBaseFilePath = Path.Combine(OrionDatabaseSQLiteTests.strTestsMiscellaneousDirectoryPath, "TableExists", OrionDatabaseSQLiteTests.strTESTBASEFILENAME);
+            xOrionException = null;
+            xBase = null;
+
+            OrionDatabaseSQLiteTests.CheckTestDatabaseFile(strTargetBaseFilePath);
+
+            try
+            {
+                xBase = new OrionDatabaseSQLite(strTargetBaseFilePath);
+                xBase.PersistentConnection = true;
+            }
+            catch (OrionException ex)
+            {
+                xOrionException = ex;
+            }
+            Assert.IsNull(xOrionException);
+            Assert.AreEqual(xBase.ConnectionState, ConnectionState.Closed);
+
+            try
+            {
+                bResult = xBase.TableExits("TEST");
+            }
+            catch (OrionException ex)
+            {
+                xOrionException = ex;
+            }
+            Assert.IsNull(xOrionException);
+            Assert.IsFalse(bResult);
+            Assert.AreEqual(xBase.ConnectionState, ConnectionState.Open);
+
+            try
+            {
+                xBase.PersistentConnection = false;
+                bResult = xBase.TableExits("T_OrionDatabases_Tests");
+            }
+            catch (OrionException ex)
+            {
+                xOrionException = ex;
+            }
+            Assert.IsNull(xOrionException);
+            Assert.IsTrue(bResult);
+            Assert.AreEqual(xBase.ConnectionState, ConnectionState.Closed);
+        }// NoPassword_TableExists_Ok()
         #endregion
 
         #region Base creation tests
