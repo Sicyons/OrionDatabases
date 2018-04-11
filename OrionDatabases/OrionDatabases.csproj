@@ -64,6 +64,7 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="Betas\Enumerations.cs" />
+    <Compile Include="Betas\Structures.cs" />
     <Compile Include="Betas\OrionDatabase.cs" />
     <Compile Include="Betas\OrionDatabaseSQLite.cs" />
     <Compile Include="Betas\Queries\OrionDeleteQuery.cs" />

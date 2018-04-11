@@ -1,10 +1,14 @@
 ﻿using System;
 using System.IO;
 using System.Data;
+using System.Text;
 using System.Threading;
 using System.Data.Common;
+using System.Globalization;
+using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using OrionCore.ErrorManagement;
+using OrionCore.LogManagement;
 using OrionDatabases.Queries;
 using OrionCore;
 
@@ -15,11 +19,10 @@ namespace OrionDatabases
     /// <br />Any opened connection is automatically closed before disposing <see cref="OrionDatabase" /> object.</remarks>
     /// <seealso cref="OrionDatabaseSQLite" />
     /// <seealso cref = "OrionDatabasePostgreSql" />
-    public abstract class OrionDatabase : IOrionErrorLogManager, IDisposable
+    public abstract class OrionDatabase : IOrionLogManager, IDisposable
     {
         #region Fields
         private Boolean bDisposed;
-        private String strLogCommentFieldName1, strLogCommentFieldName2, strLogCommentFieldName3, strLogContextFieldName, strLogDateFieldName, strLogTableName;
         private ObservableCollection<OrionQuery> xQueries;
         #endregion
 
@@ -58,6 +61,8 @@ namespace OrionDatabases
         /// <value>Type : <see cref="TransactionStates"/>
         /// <br/>State of the current connection. Default value is <i>None</i>.</value>
         public TransactionStates TransactionState { get; private set; }
+        public LogConfigurationInfos LogInfoConfig { get; private set; }
+        public LogConfigurationInfos LogErrorConfig { get; private set; }
         /// <summary>
         /// Connection string used to establish connection with the target database.
         /// </summary>
@@ -122,10 +127,51 @@ namespace OrionDatabases
             this.Dispose(true);
             GC.SuppressFinalize(this);
         }// Dispose()
-        public virtual Boolean LogError(OrionErrorLogInfos errorLog)
+        public virtual Boolean SaveLog(OrionLogInfos logInfos)
         {
-            throw new NotImplementedException();
-        }// LogError()
+            List<String> strFieldNames;
+            OrionInsertQuery xQuery;
+            LogConfigurationInfos xLogInfos;
+
+            xLogInfos = new LogConfigurationInfos();
+
+            switch (logInfos.EventType)
+            {
+                case OrionCore.EventManagement.EventTypes.Information:
+                    xLogInfos = this.LogInfoConfig;
+
+                    if (xLogInfos.IsInitialized == false)
+                        throw new OrionException("OrionDatatable information log have to be initialized;");
+
+                    break;
+                case OrionCore.EventManagement.EventTypes.Warning:
+                case OrionCore.EventManagement.EventTypes.Error:
+                case OrionCore.EventManagement.EventTypes.CriticalError:
+                    xLogInfos = this.LogErrorConfig;
+
+                    if (xLogInfos.IsInitialized == false)
+                        throw new OrionException("OrionDatatable error log have to be initialized;");
+                    break;
+                default:
+                    xLogInfos = new LogConfigurationInfos();
+                    break;
+            }
+
+            strFieldNames = new List<String>(new String[] { xLogInfos.DateFieldName, xLogInfos.SourceApplicationFieldName, xLogInfos.TypeLogFieldName, xLogInfos.MessageFieldName });
+            if (String.IsNullOrEmpty(xLogInfos.Comment1FieldName) == false) strFieldNames.Add(xLogInfos.Comment1FieldName);
+            if (String.IsNullOrEmpty(xLogInfos.Comment2FieldName) == false) strFieldNames.Add(xLogInfos.Comment2FieldName);
+
+            xQuery = this.PrepareQueryInsert(xLogInfos.TableName, strFieldNames.ToArray());
+            xQuery.AddParameter(this.ParameterCharacter + xLogInfos.DateFieldName, DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss", CultureInfo.CurrentCulture));
+            xQuery.AddParameter(this.ParameterCharacter + xLogInfos.SourceApplicationFieldName, logInfos.SourceApplicationName);
+            xQuery.AddParameter(this.ParameterCharacter + xLogInfos.TypeLogFieldName, logInfos.EventType.ToString());
+            xQuery.AddParameter(this.ParameterCharacter + xLogInfos.MessageFieldName, logInfos.LogMessage.ToString());
+            if (String.IsNullOrEmpty(xLogInfos.Comment1FieldName) == false) xQuery.AddParameter(this.ParameterCharacter + xLogInfos.Comment1FieldName, logInfos.Comment1.ToString());
+            if (String.IsNullOrEmpty(xLogInfos.Comment2FieldName) == false) xQuery.AddParameter(this.ParameterCharacter + xLogInfos.Comment2FieldName, logInfos.Comment2.ToString());
+            xQuery.Execute();
+
+            return true;
+        }// SaveLog()
         #endregion
 
         #region Virtual and abstract interfaces
@@ -270,15 +316,23 @@ namespace OrionDatabases
             else
                 throw new OrionException("No connection has been initialized");
         }// Disconnect()
-        public void InitLogs(String tableName = "T_Logs", String dateFieldName = "CreationDate", String contextFieldName = "Context", String commentFieldName1 = "Comment", String commentFieldName2 = null, String commentFieldName3 = null)
+        public void InitLogs(String tableName = "T_Logs", String dateFieldName = "CreationDate", String sourceApplicationFieldName = "SourceApplication", String logTypeFieldName = "Type", String messageFieldName = "Message", String comment1FieldName = null, String comment2FieldName = null, Boolean createMissingTable = false)
         {
-            this.strLogTableName = tableName;
-            this.strLogDateFieldName = dateFieldName;
-            this.strLogContextFieldName = contextFieldName;
-            this.strLogCommentFieldName1 = commentFieldName1;
-            this.strLogCommentFieldName2 = commentFieldName2;
-            this.strLogCommentFieldName3 = commentFieldName3;
+            this.InitInformationLogs(tableName, dateFieldName, sourceApplicationFieldName, logTypeFieldName, messageFieldName, comment1FieldName, comment2FieldName, createMissingTable);
+            this.InitErrorLogs(tableName, dateFieldName, sourceApplicationFieldName, logTypeFieldName, messageFieldName, comment1FieldName, comment2FieldName, false);
         }// InitLogs()
+        public void InitInformationLogs(String tableName = "T_Logs", String dateFieldName = "CreationDate", String sourceApplicationFieldName = "SourceApplication", String logTypeFieldName = "Type", String messageFieldName = "Message", String comment1FieldName = null, String comment2FieldName = null, Boolean createMissingTable = false)
+        {
+            this.LogInfoConfig = new LogConfigurationInfos(tableName, dateFieldName, sourceApplicationFieldName, logTypeFieldName, messageFieldName, comment1FieldName, comment2FieldName);
+
+            if (createMissingTable == true) this.CreateLogTable(this.LogInfoConfig);
+        }// InitInformationLogs()
+        public void InitErrorLogs(String tableName = "T_Logs", String dateFieldName = "CreationDate", String sourceApplicationFieldName = "SourceApplication", String logTypeFieldName = "Type", String messageFieldName = "Message", String comment1FieldName = null, String comment2FieldName = null, Boolean createMissingTable = false)
+        {
+            this.LogErrorConfig = new LogConfigurationInfos(tableName, dateFieldName, sourceApplicationFieldName, logTypeFieldName, messageFieldName, comment1FieldName, comment2FieldName);
+
+            if (createMissingTable == true) this.CreateLogTable(this.LogErrorConfig);
+        }// InitErrorLogs
         public OrionDeleteQuery PrepareQueryDelete(String tableName)
         {
             return this.PrepareQueryDelete(tableName, null);
@@ -601,6 +655,26 @@ namespace OrionDatabases
         #endregion
 
         #region Utility procedures
+        private void CreateLogTable(LogConfigurationInfos logConfig)
+        {
+            StringBuilder strQuery;
+            OrionExecuteQuery xQuery;
+
+            if (this.TableExits(logConfig.TableName) == false)
+            {
+                strQuery = new StringBuilder("CREATE TABLE " + logConfig.TableName + " (");
+                strQuery.Append(logConfig.DateFieldName + " text NOT NULL,");
+                strQuery.Append(logConfig.SourceApplicationFieldName + " text NOT NULL,");
+                strQuery.Append(logConfig.TypeLogFieldName + " text,");
+                strQuery.Append(logConfig.MessageFieldName + " text");
+                if (String.IsNullOrEmpty(logConfig.Comment1FieldName) == false) strQuery.Append("," + logConfig.Comment1FieldName + " text");
+                if (String.IsNullOrEmpty(logConfig.Comment2FieldName) == false) strQuery.Append("," + logConfig.Comment2FieldName + " text");
+                strQuery.Append(")");
+
+                xQuery = this.PrepareQueryExecute(strQuery.ToString());
+                xQuery.Execute();
+            }
+        }// CreateLogTable()
         /// <summary>
         /// Releases the unmanaged resources used by the <see cref="OrionDatabase"/> object and optionally releases the managed resources.
         /// </summary>

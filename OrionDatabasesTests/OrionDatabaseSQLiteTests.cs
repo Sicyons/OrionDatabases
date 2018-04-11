@@ -2,8 +2,12 @@
 using System.IO;
 using System.Data;
 using System.Linq;
+using System.Reflection;
+using System.Globalization;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using OrionCore.ErrorManagement;
+using OrionCore.EventManagement;
+using OrionCore.LogManagement;
 using OrionDatabases.Queries;
 using System.Data.SQLite;
 using OrionDatabases;
@@ -52,84 +56,29 @@ namespace OrionDatabasesTests
                     if (Directory.Exists(strTargetDirectoryPath) == false) Directory.CreateDirectory(strTargetDirectoryPath);
                 }
 
-                //** No Password. **
-                if (Directory.Exists(OrionDatabaseSQLiteTests.strTestsNoPasswordDirectoryPath) == false) Directory.CreateDirectory(OrionDatabaseSQLiteTests.strTestsNoPasswordDirectoryPath);
-                strDirectoryNames = new String[] { "Missing Database", "Create Database", "Initialize Database", "Connect Database" };
-                foreach (String strDirectoryNameTemp in strDirectoryNames)
-                {
-                    strTargetDirectoryPath = Path.Combine(OrionDatabaseSQLiteTests.strTestsNoPasswordDirectoryPath, strDirectoryNameTemp);
-                    if (Directory.Exists(strTargetDirectoryPath) == false) Directory.CreateDirectory(strTargetDirectoryPath);
-                }
+                // No Password.
+                OrionDatabaseSQLiteTests.InitializeDirectories(OrionDatabaseSQLiteTests.strTestsNoPasswordDirectoryPath, new String[] { "Missing Database", "Create Database", "Initialize Database", "Connect Database" });
 
-                //** No Password Logs. **
-                strTargetDirectoryPath = Path.Combine(OrionDatabaseSQLiteTests.strTestsNoPasswordDirectoryPath, "Logs");
-                if (Directory.Exists(strTargetDirectoryPath) == false) Directory.CreateDirectory(strTargetDirectoryPath);
-                strDirectoryNames = new String[] { "Initialization" };
-                foreach (String strDirectoryNameTemp in strDirectoryNames)
-                {
-                    strTargetDirectoryPath = Path.Combine(OrionDatabaseSQLiteTests.strTestsNoPasswordDirectoryPath, "Logs", strDirectoryNameTemp);
-                    if (Directory.Exists(strTargetDirectoryPath) == false) Directory.CreateDirectory(strTargetDirectoryPath);
-                }
+                // No Password Logs.
+                OrionDatabaseSQLiteTests.InitializeDirectories(Path.Combine(OrionDatabaseSQLiteTests.strTestsNoPasswordDirectoryPath, "Logs"), new String[] { "Initialization Default Values", "Initialization Default Values Create Table", "Initialization User Values Separate Tables", "Initialization User Values Create Separate Tables", "No Initialization Exception", "ReportEvent Information Default Table Ok", "ReportEvent Warning User Table Ok", "ReportEvent User Tables Ok" });
 
-                //** No Password DELETE queries. **
-                strTargetDirectoryPath = Path.Combine(OrionDatabaseSQLiteTests.strTestsNoPasswordDirectoryPath, "Delete Queries");
-                if (Directory.Exists(strTargetDirectoryPath) == false) Directory.CreateDirectory(strTargetDirectoryPath);
-                strDirectoryNames = new String[] { "No Table", "Unknown Table", "Whole Table", "Row With Parameters" };
-                foreach (String strDirectoryNameTemp in strDirectoryNames)
-                {
-                    strTargetDirectoryPath = Path.Combine(OrionDatabaseSQLiteTests.strTestsNoPasswordDirectoryPath, "Delete Queries", strDirectoryNameTemp);
-                    if (Directory.Exists(strTargetDirectoryPath) == false) Directory.CreateDirectory(strTargetDirectoryPath);
-                }
+                // No Password DELETE queries.
+                OrionDatabaseSQLiteTests.InitializeDirectories(Path.Combine(OrionDatabaseSQLiteTests.strTestsNoPasswordDirectoryPath, "Delete Queries"), new String[] { "No Table", "Unknown Table", "Whole Table", "Row With Parameters" });
 
-                //** No Password INSERT queries. **
-                strTargetDirectoryPath = Path.Combine(OrionDatabaseSQLiteTests.strTestsNoPasswordDirectoryPath, "Insert Queries");
-                if (Directory.Exists(strTargetDirectoryPath) == false) Directory.CreateDirectory(strTargetDirectoryPath);
-                strDirectoryNames = new String[] { "No Table", "Unknown Table", "No Field Names", "No Row", "Whole Row", "Row By Parameters" };
-                foreach (String strDirectoryNameTemp in strDirectoryNames)
-                {
-                    strTargetDirectoryPath = Path.Combine(OrionDatabaseSQLiteTests.strTestsNoPasswordDirectoryPath, "Insert Queries", strDirectoryNameTemp);
-                    if (Directory.Exists(strTargetDirectoryPath) == false) Directory.CreateDirectory(strTargetDirectoryPath);
-                }
+                // No Password INSERT queries.
+                OrionDatabaseSQLiteTests.InitializeDirectories(Path.Combine(OrionDatabaseSQLiteTests.strTestsNoPasswordDirectoryPath, "Insert Queries"), new String[] { "No Table", "Unknown Table", "No Field Names", "No Row", "Whole Row", "Row By Parameters" });
 
-                //** No Password SELECT queries. **
-                strTargetDirectoryPath = Path.Combine(OrionDatabaseSQLiteTests.strTestsNoPasswordDirectoryPath, "Select Queries");
-                if (Directory.Exists(strTargetDirectoryPath) == false) Directory.CreateDirectory(strTargetDirectoryPath);
-                strDirectoryNames = new String[] { "No Query", "Bad Query", "Ok", "With Parameters Ok", "With Missing Parameter", "With Unnamed Parameter" };
-                foreach (String strDirectoryNameTemp in strDirectoryNames)
-                {
-                    strTargetDirectoryPath = Path.Combine(OrionDatabaseSQLiteTests.strTestsNoPasswordDirectoryPath, "Select Queries", strDirectoryNameTemp);
-                    if (Directory.Exists(strTargetDirectoryPath) == false) Directory.CreateDirectory(strTargetDirectoryPath);
-                }
+                // No Password SELECT queries.
+                OrionDatabaseSQLiteTests.InitializeDirectories(Path.Combine(OrionDatabaseSQLiteTests.strTestsNoPasswordDirectoryPath, "Select Queries"), new String[] { "No Query", "Bad Query", "Ok", "With Parameters Ok", "With Missing Parameter", "With Unnamed Parameter" });
 
-                //** No Password RowCounter queries. **
-                strTargetDirectoryPath = Path.Combine(OrionDatabaseSQLiteTests.strTestsNoPasswordDirectoryPath, "RowCount Queries");
-                if (Directory.Exists(strTargetDirectoryPath) == false) Directory.CreateDirectory(strTargetDirectoryPath);
-                strDirectoryNames = new String[] { "No Table", "Unknown Table", "OK", "With Parameters" };
-                foreach (String strDirectoryNameTemp in strDirectoryNames)
-                {
-                    strTargetDirectoryPath = Path.Combine(OrionDatabaseSQLiteTests.strTestsNoPasswordDirectoryPath, "RowCount Queries", strDirectoryNameTemp);
-                    if (Directory.Exists(strTargetDirectoryPath) == false) Directory.CreateDirectory(strTargetDirectoryPath);
-                }
+                // No Password RowCounter queries.
+                OrionDatabaseSQLiteTests.InitializeDirectories(Path.Combine(OrionDatabaseSQLiteTests.strTestsNoPasswordDirectoryPath, "RowCount Queries"), new String[] { "No Table", "Unknown Table", "OK", "With Parameters" });
 
-                //** No Password UPDATE queries. **
-                strTargetDirectoryPath = Path.Combine(OrionDatabaseSQLiteTests.strTestsNoPasswordDirectoryPath, "Update Queries");
-                if (Directory.Exists(strTargetDirectoryPath) == false) Directory.CreateDirectory(strTargetDirectoryPath);
-                strDirectoryNames = new String[] { "No Table", "No Field Names", "Unknown Table", "Row" };
-                foreach (String strDirectoryNameTemp in strDirectoryNames)
-                {
-                    strTargetDirectoryPath = Path.Combine(OrionDatabaseSQLiteTests.strTestsNoPasswordDirectoryPath, "Update Queries", strDirectoryNameTemp);
-                    if (Directory.Exists(strTargetDirectoryPath) == false) Directory.CreateDirectory(strTargetDirectoryPath);
-                }
+                // No Password UPDATE queries.
+                OrionDatabaseSQLiteTests.InitializeDirectories(Path.Combine(OrionDatabaseSQLiteTests.strTestsNoPasswordDirectoryPath, "Update Queries"), new String[] { "No Table", "No Field Names", "Unknown Table", "Row" });
 
-                //** No Password EXECUTE queries. **
-                strTargetDirectoryPath = Path.Combine(OrionDatabaseSQLiteTests.strTestsNoPasswordDirectoryPath, "Execute Queries");
-                if (Directory.Exists(strTargetDirectoryPath) == false) Directory.CreateDirectory(strTargetDirectoryPath);
-                strDirectoryNames = new String[] { "No Query", "Bad Query", "OK" };
-                foreach (String strDirectoryNameTemp in strDirectoryNames)
-                {
-                    strTargetDirectoryPath = Path.Combine(OrionDatabaseSQLiteTests.strTestsNoPasswordDirectoryPath, "Execute Queries", strDirectoryNameTemp);
-                    if (Directory.Exists(strTargetDirectoryPath) == false) Directory.CreateDirectory(strTargetDirectoryPath);
-                }
+                // No Password EXECUTE queries.
+                OrionDatabaseSQLiteTests.InitializeDirectories(Path.Combine(OrionDatabaseSQLiteTests.strTestsNoPasswordDirectoryPath, "Execute Queries"), new String[] { "No Query", "Bad Query", "OK" });
 
                 //** No Password Transactions. **
                 strTargetDirectoryPath = Path.Combine(OrionDatabaseSQLiteTests.strTestsNoPasswordDirectoryPath, "Transactions");
@@ -137,14 +86,8 @@ namespace OrionDatabasesTests
                 strTargetDirectoryPath = Path.Combine(OrionDatabaseSQLiteTests.strTestsNoPasswordDirectoryPath, "Transactions", "OK");
                 if (Directory.Exists(strTargetDirectoryPath) == false) Directory.CreateDirectory(strTargetDirectoryPath);
 
-                //** Password. **
-                if (Directory.Exists(OrionDatabaseSQLiteTests.strTestsPasswordDirectoryPath) == false) Directory.CreateDirectory(OrionDatabaseSQLiteTests.strTestsPasswordDirectoryPath);
-                strDirectoryNames = new String[] { "Missing Database", "Create Database", "Initialize Database", "Connect Database" };
-                foreach (String strDirectoryNameTemp in strDirectoryNames)
-                {
-                    strTargetDirectoryPath = Path.Combine(OrionDatabaseSQLiteTests.strTestsPasswordDirectoryPath, strDirectoryNameTemp);
-                    if (Directory.Exists(strTargetDirectoryPath) == false) Directory.CreateDirectory(strTargetDirectoryPath);
-                }
+                // Password.
+                OrionDatabaseSQLiteTests.InitializeDirectories(OrionDatabaseSQLiteTests.strTestsPasswordDirectoryPath, new String[] { "Missing Database", "Create Database", "Initialize Database", "Connect Database" });
             }
             catch (Exception ex)
             {
@@ -390,13 +333,15 @@ namespace OrionDatabasesTests
 
         #region Logs
         [TestMethod, TestCategory("OrionDatabaseSQLite")]
-        public void NoPassword_Logs_Initialization()
+        public void NoPassword_Logs_Initialization_Default_Values()
         {
+            Boolean bTableExists;
             String strTargetBaseFilePath;
             OrionException xOrionException;
             OrionDatabaseSQLite xBase;
 
-            strTargetBaseFilePath = Path.Combine(OrionDatabaseSQLiteTests.strTestsNoPasswordDirectoryPath, "Logs", "Initialization", OrionDatabaseSQLiteTests.strTESTBASEFILENAME);
+            bTableExists = false;
+            strTargetBaseFilePath = Path.Combine(OrionDatabaseSQLiteTests.strTestsNoPasswordDirectoryPath, "Logs", "Initialization Default Values", OrionDatabaseSQLiteTests.strTESTBASEFILENAME);
             xOrionException = null;
             xBase = null;
 
@@ -414,7 +359,733 @@ namespace OrionDatabasesTests
             Assert.AreEqual(xBase.ConnectionState, ConnectionState.Closed);
 
             xBase.InitLogs();
-        }// NoPassword_Logs_Initialization()
+            Assert.IsTrue(xBase.LogInfoConfig.IsInitialized);
+            Assert.AreEqual(xBase.LogInfoConfig.TableName, "T_Logs");
+            Assert.AreEqual(xBase.LogInfoConfig.DateFieldName, "CreationDate");
+            Assert.AreEqual(xBase.LogInfoConfig.SourceApplicationFieldName, "SourceApplication");
+            Assert.AreEqual(xBase.LogInfoConfig.MessageFieldName, "Message");
+            Assert.IsNull(xBase.LogInfoConfig.Comment1FieldName);
+            Assert.IsNull(xBase.LogInfoConfig.Comment2FieldName);
+            Assert.AreEqual(xBase.LogInfoConfig.TypeLogFieldName, "Type");
+
+            Assert.IsTrue(xBase.LogErrorConfig.IsInitialized);
+            Assert.AreEqual(xBase.LogErrorConfig.TableName, "T_Logs");
+            Assert.AreEqual(xBase.LogErrorConfig.DateFieldName, "CreationDate");
+            Assert.AreEqual(xBase.LogErrorConfig.SourceApplicationFieldName, "SourceApplication");
+            Assert.AreEqual(xBase.LogErrorConfig.MessageFieldName, "Message");
+            Assert.IsNull(xBase.LogErrorConfig.Comment1FieldName);
+            Assert.IsNull(xBase.LogErrorConfig.Comment2FieldName);
+            Assert.AreEqual(xBase.LogErrorConfig.TypeLogFieldName, "Type");
+
+            try
+            {
+                bTableExists = xBase.TableExits("T_Logs");
+            }
+            catch (OrionException ex)
+            {
+                xOrionException = ex;
+            }
+            Assert.IsNull(xOrionException);
+            Assert.IsFalse(bTableExists);
+
+            xBase.Dispose();
+            xBase = null;
+        }// NoPassword_Logs_Initialization_Default_Values()
+        [TestMethod, TestCategory("OrionDatabaseSQLite")]
+        public void NoPassword_Logs_Initialization_Default_Values_Create_Table()
+        {
+            Boolean bTableExists;
+            String strTargetBaseFilePath;
+            DataTable xResults;
+            OrionException xOrionException;
+            OrionDatabaseSQLite xBase;
+
+            bTableExists = false;
+            strTargetBaseFilePath = Path.Combine(OrionDatabaseSQLiteTests.strTestsNoPasswordDirectoryPath, "Logs", "Initialization Default Values Create Table", OrionDatabaseSQLiteTests.strTESTBASEFILENAME);
+            xResults = null;
+            xOrionException = null;
+            xBase = null;
+
+            OrionDatabaseSQLiteTests.CheckTestDatabaseFile(strTargetBaseFilePath);
+
+            try
+            {
+                xBase = new OrionDatabaseSQLite(strTargetBaseFilePath);
+                xBase.PersistentConnection = true;
+            }
+            catch (OrionException ex)
+            {
+                xOrionException = ex as OrionException;
+            }
+            Assert.IsNull(xOrionException);
+            Assert.AreEqual(xBase.ConnectionState, ConnectionState.Closed);
+
+            xBase.InitLogs(createMissingTable: true);
+            Assert.IsTrue(xBase.LogInfoConfig.IsInitialized);
+            Assert.AreEqual(xBase.LogInfoConfig.TableName, "T_Logs");
+            Assert.AreEqual(xBase.LogInfoConfig.DateFieldName, "CreationDate");
+            Assert.AreEqual(xBase.LogInfoConfig.SourceApplicationFieldName, "SourceApplication");
+            Assert.AreEqual(xBase.LogInfoConfig.TypeLogFieldName, "Type");
+            Assert.AreEqual(xBase.LogInfoConfig.MessageFieldName, "Message");
+            Assert.IsNull(xBase.LogInfoConfig.Comment1FieldName);
+            Assert.IsNull(xBase.LogInfoConfig.Comment2FieldName);
+
+            Assert.IsTrue(xBase.LogErrorConfig.IsInitialized);
+            Assert.AreEqual(xBase.LogErrorConfig.TableName, xBase.LogInfoConfig.TableName);
+            Assert.AreEqual(xBase.LogErrorConfig.DateFieldName, xBase.LogInfoConfig.DateFieldName);
+            Assert.AreEqual(xBase.LogErrorConfig.SourceApplicationFieldName, xBase.LogInfoConfig.SourceApplicationFieldName);
+            Assert.AreEqual(xBase.LogErrorConfig.TypeLogFieldName, xBase.LogInfoConfig.TypeLogFieldName);
+            Assert.AreEqual(xBase.LogErrorConfig.MessageFieldName, xBase.LogInfoConfig.MessageFieldName);
+            Assert.IsNull(xBase.LogErrorConfig.Comment1FieldName);
+            Assert.IsNull(xBase.LogErrorConfig.Comment2FieldName);
+
+            try
+            {
+                bTableExists = xBase.TableExits("T_Logs");
+            }
+            catch (OrionException ex)
+            {
+                xOrionException = ex;
+            }
+            Assert.IsNull(xOrionException);
+            Assert.IsTrue(bTableExists);
+            Assert.AreEqual(xBase.ConnectionState, ConnectionState.Open);
+
+            try
+            {
+                xBase.PersistentConnection = false;
+                xResults = (DataTable)xBase.PrepareQuerySelect("SELECT * FROM " + xBase.LogInfoConfig.TableName).Execute();
+            }
+            catch (OrionException ex)
+            {
+                xOrionException = ex;
+            }
+            Assert.IsNull(xOrionException);
+            Assert.IsNotNull(xResults);
+            Assert.IsTrue(xResults.Columns.Contains(xBase.LogInfoConfig.DateFieldName));
+            Assert.IsTrue(xResults.Columns.Contains(xBase.LogInfoConfig.SourceApplicationFieldName));
+            Assert.IsTrue(xResults.Columns.Contains(xBase.LogInfoConfig.TypeLogFieldName));
+            Assert.IsTrue(xResults.Columns.Contains(xBase.LogInfoConfig.MessageFieldName));
+            Assert.AreEqual(xBase.ConnectionState, ConnectionState.Closed);
+
+            xBase.Dispose();
+            xBase = null;
+        }// NoPassword_Logs_Initialization_Default_Values_Create_Table()
+        [TestMethod, TestCategory("OrionDatabaseSQLite")]
+        public void NoPassword_Logs_Initialization_User_Values_Separate_Tables()
+        {
+            Boolean bTableExists;
+            String strTargetBaseFilePath;
+            OrionException xOrionException;
+            OrionDatabaseSQLite xBase;
+
+            bTableExists = false;
+            strTargetBaseFilePath = Path.Combine(OrionDatabaseSQLiteTests.strTestsNoPasswordDirectoryPath, "Logs", "Initialization Default Values Separate Tables", OrionDatabaseSQLiteTests.strTESTBASEFILENAME);
+            xOrionException = null;
+            xBase = null;
+
+            OrionDatabaseSQLiteTests.CheckTestDatabaseFile(strTargetBaseFilePath);
+
+            try
+            {
+                xBase = new OrionDatabaseSQLite(strTargetBaseFilePath);
+                xBase.PersistentConnection = true;
+            }
+            catch (OrionException ex)
+            {
+                xOrionException = ex as OrionException;
+            }
+            Assert.IsNull(xOrionException);
+
+            xBase.InitInformationLogs(tableName: "T_Logs_Infos", dateFieldName: "CreationDateInfos", sourceApplicationFieldName: "SourceApplicationInfos", logTypeFieldName: "TypeInfos", messageFieldName: "MessageInfos");
+            xBase.InitErrorLogs(tableName: "T_Logs_Errors", dateFieldName: "CreationDateErrors", sourceApplicationFieldName: "SourceApplicationErrors", logTypeFieldName: "TypeErrors", messageFieldName: "MessageErrors");
+
+            Assert.IsTrue(xBase.LogInfoConfig.IsInitialized);
+            Assert.AreEqual(xBase.LogInfoConfig.TableName, "T_Logs_Infos");
+            Assert.AreEqual(xBase.LogInfoConfig.DateFieldName, "CreationDateInfos");
+            Assert.AreEqual(xBase.LogInfoConfig.SourceApplicationFieldName, "SourceApplicationInfos");
+            Assert.AreEqual(xBase.LogInfoConfig.TypeLogFieldName, "TypeInfos");
+            Assert.AreEqual(xBase.LogInfoConfig.MessageFieldName, "MessageInfos");
+            Assert.IsNull(xBase.LogInfoConfig.Comment1FieldName);
+            Assert.IsNull(xBase.LogInfoConfig.Comment2FieldName);
+
+            Assert.IsTrue(xBase.LogErrorConfig.IsInitialized);
+            Assert.AreEqual(xBase.LogErrorConfig.TableName, "T_Logs_Errors");
+            Assert.AreEqual(xBase.LogErrorConfig.DateFieldName, "CreationDateErrors");
+            Assert.AreEqual(xBase.LogErrorConfig.SourceApplicationFieldName, "SourceApplicationErrors");
+            Assert.AreEqual(xBase.LogErrorConfig.TypeLogFieldName, "TypeErrors");
+            Assert.AreEqual(xBase.LogErrorConfig.MessageFieldName, "MessageErrors");
+            Assert.IsNull(xBase.LogErrorConfig.Comment1FieldName);
+            Assert.IsNull(xBase.LogErrorConfig.Comment2FieldName);
+
+            try
+            {
+                bTableExists = xBase.TableExits("T_Logs_Infos");
+            }
+            catch (OrionException ex)
+            {
+                xOrionException = ex;
+            }
+            Assert.IsNull(xOrionException);
+            Assert.IsFalse(bTableExists);
+
+            try
+            {
+                xBase.PersistentConnection = false;
+                bTableExists = xBase.TableExits("T_logs_Errors");
+            }
+            catch (OrionException ex)
+            {
+                xOrionException = ex;
+            }
+            Assert.IsNull(xOrionException);
+            Assert.IsFalse(bTableExists);
+
+            xBase.Dispose();
+            xBase = null;
+        }// NoPassword_Logs_Initialization_Default_Values_Separate_Tables() 
+        [TestMethod, TestCategory("OrionDatabaseSQLite")]
+        public void NoPassword_Logs_Initialization_User_Values_Create_Separate_Tables()
+        {
+            Boolean bTableExists;
+            String strTargetBaseFilePath;
+            DataTable xResults;
+            OrionException xOrionException;
+            OrionDatabaseSQLite xBase;
+
+            bTableExists = false;
+            strTargetBaseFilePath = Path.Combine(OrionDatabaseSQLiteTests.strTestsNoPasswordDirectoryPath, "Logs", "Initialization Default Values Create Separate Tables", OrionDatabaseSQLiteTests.strTESTBASEFILENAME);
+            xResults = null;
+            xOrionException = null;
+            xBase = null;
+
+            OrionDatabaseSQLiteTests.CheckTestDatabaseFile(strTargetBaseFilePath);
+
+            try
+            {
+                xBase = new OrionDatabaseSQLite(strTargetBaseFilePath);
+                xBase.PersistentConnection = true;
+            }
+            catch (OrionException ex)
+            {
+                xOrionException = ex as OrionException;
+            }
+            Assert.IsNull(xOrionException);
+
+            xBase.InitInformationLogs(tableName: "T_Logs_Infos", dateFieldName: "CreationDateInfos", sourceApplicationFieldName: "SourceApplicationInfos", logTypeFieldName: "TypeInfos", messageFieldName: "MessageInfos", createMissingTable: true);
+            xBase.InitErrorLogs(tableName: "T_Logs_Errors", dateFieldName: "CreationDateErrors", sourceApplicationFieldName: "SourceApplicationErrors", logTypeFieldName: "TypeErrors", messageFieldName: "MessageErrors", createMissingTable: true);
+
+            Assert.IsTrue(xBase.LogInfoConfig.IsInitialized);
+            Assert.AreEqual(xBase.LogInfoConfig.TableName, "T_Logs_Infos");
+            Assert.AreEqual(xBase.LogInfoConfig.DateFieldName, "CreationDateInfos");
+            Assert.AreEqual(xBase.LogInfoConfig.SourceApplicationFieldName, "SourceApplicationInfos");
+            Assert.AreEqual(xBase.LogInfoConfig.TypeLogFieldName, "TypeInfos");
+            Assert.AreEqual(xBase.LogInfoConfig.MessageFieldName, "MessageInfos");
+            Assert.IsNull(xBase.LogInfoConfig.Comment1FieldName);
+            Assert.IsNull(xBase.LogInfoConfig.Comment2FieldName);
+
+            Assert.IsTrue(xBase.LogErrorConfig.IsInitialized);
+            Assert.AreEqual(xBase.LogErrorConfig.TableName, "T_Logs_Errors");
+            Assert.AreEqual(xBase.LogErrorConfig.DateFieldName, "CreationDateErrors");
+            Assert.AreEqual(xBase.LogErrorConfig.SourceApplicationFieldName, "SourceApplicationErrors");
+            Assert.AreEqual(xBase.LogErrorConfig.TypeLogFieldName, "TypeErrors");
+            Assert.AreEqual(xBase.LogErrorConfig.MessageFieldName, "MessageErrors");
+            Assert.IsNull(xBase.LogErrorConfig.Comment1FieldName);
+            Assert.IsNull(xBase.LogErrorConfig.Comment2FieldName);
+
+            try
+            {
+                bTableExists = xBase.TableExits(xBase.LogInfoConfig.TableName);
+            }
+            catch (OrionException ex)
+            {
+                xOrionException = ex;
+            }
+            Assert.IsNull(xOrionException);
+            Assert.IsTrue(bTableExists);
+            Assert.AreEqual(xBase.ConnectionState, ConnectionState.Open);
+
+            try
+            {
+                xResults = (DataTable)xBase.PrepareQuerySelect("SELECT * FROM " + xBase.LogInfoConfig.TableName).Execute();
+            }
+            catch (OrionException ex)
+            {
+                xOrionException = ex;
+            }
+            Assert.IsNull(xOrionException);
+            Assert.IsNotNull(xResults);
+            Assert.IsTrue(xResults.Columns.Contains(xBase.LogInfoConfig.DateFieldName));
+            Assert.IsTrue(xResults.Columns.Contains(xBase.LogInfoConfig.SourceApplicationFieldName));
+            Assert.IsTrue(xResults.Columns.Contains(xBase.LogInfoConfig.TypeLogFieldName));
+            Assert.IsTrue(xResults.Columns.Contains(xBase.LogInfoConfig.MessageFieldName));
+            Assert.AreEqual(xBase.ConnectionState, ConnectionState.Open);
+
+            try
+            {
+                bTableExists = xBase.TableExits(xBase.LogErrorConfig.TableName);
+            }
+            catch (OrionException ex)
+            {
+                xOrionException = ex;
+            }
+            Assert.IsNull(xOrionException);
+            Assert.IsTrue(bTableExists);
+            Assert.AreEqual(xBase.ConnectionState, ConnectionState.Open);
+
+            try
+            {
+                xBase.PersistentConnection = false;
+                xResults = (DataTable)xBase.PrepareQuerySelect("SELECT * FROM " + xBase.LogErrorConfig.TableName).Execute();
+            }
+            catch (OrionException ex)
+            {
+                xOrionException = ex;
+            }
+            Assert.IsNull(xOrionException);
+            Assert.IsNotNull(xResults);
+            Assert.IsTrue(xResults.Columns.Contains(xBase.LogErrorConfig.DateFieldName));
+            Assert.IsTrue(xResults.Columns.Contains(xBase.LogErrorConfig.SourceApplicationFieldName));
+            Assert.IsTrue(xResults.Columns.Contains(xBase.LogErrorConfig.TypeLogFieldName));
+            Assert.IsTrue(xResults.Columns.Contains(xBase.LogErrorConfig.MessageFieldName));
+            Assert.AreEqual(xBase.ConnectionState, ConnectionState.Closed);
+
+            xBase.Dispose();
+            xBase = null;
+        }// NoPassword_Logs_Initialization_Default_Values_Create_Separate_Tables()
+        [TestMethod, TestCategory("OrionDatabaseSQLite")]
+        public void NoPassword_Logs_No_Initialization_Exception()
+        {
+            String strTargetBaseFilePath;
+            OrionException xOrionException;
+            OrionDatabaseSQLite xBase;
+            OrionEventManager xEventManager;
+
+            strTargetBaseFilePath = Path.Combine(OrionDatabaseSQLiteTests.strTestsNoPasswordDirectoryPath, "Logs", "No Initialization Exception", OrionDatabaseSQLiteTests.strTESTBASEFILENAME);
+            xOrionException = null;
+            xBase = null;
+
+            OrionDatabaseSQLiteTests.CheckTestDatabaseFile(strTargetBaseFilePath);
+
+            try
+            {
+                xBase = new OrionDatabaseSQLite(strTargetBaseFilePath);
+            }
+            catch (OrionException ex)
+            {
+                xOrionException = ex as OrionException;
+            }
+            Assert.IsNull(xOrionException);
+
+            try
+            {
+                xEventManager = new OrionEventManager(xBase);
+                xEventManager.ReportEvent("Information log test", EventTypes.Information);
+            }
+            catch (OrionException ex)
+            {
+                xOrionException = ex as OrionException;
+            }
+            Assert.IsNotNull(xOrionException);
+            Assert.AreEqual(xOrionException.Message, "OrionDatatable information log have to be initialized;");
+
+            try
+            {
+                xEventManager = new OrionEventManager(xBase);
+                xEventManager.ReportEvent("Error log test", EventTypes.Warning);
+            }
+            catch (OrionException ex)
+            {
+                xOrionException = ex as OrionException;
+            }
+            Assert.IsNotNull(xOrionException);
+            Assert.AreEqual(xOrionException.Message, "OrionDatatable error log have to be initialized;");
+
+            try
+            {
+                xEventManager = new OrionEventManager(xBase);
+                xEventManager.ReportEvent("Error log test", EventTypes.Error);
+            }
+            catch (OrionException ex)
+            {
+                xOrionException = ex as OrionException;
+            }
+            Assert.IsNotNull(xOrionException);
+            Assert.AreEqual(xOrionException.Message, "OrionDatatable error log have to be initialized;");
+
+            try
+            {
+                xEventManager = new OrionEventManager(xBase);
+                xEventManager.ReportEvent("Error log test", EventTypes.CriticalError);
+            }
+            catch (OrionException ex)
+            {
+                xOrionException = ex as OrionException;
+            }
+            Assert.IsNotNull(xOrionException);
+            Assert.AreEqual(xOrionException.Message, "OrionDatatable error log have to be initialized;");
+
+            xBase.Dispose();
+            xBase = null;
+        }// NoPassword_Logs_No_Initialization_Exception()
+        [TestMethod, TestCategory("OrionDatabaseSQLite")]
+        public void NoPassword_Logs_ReportEvent_Information_Default_Table_Ok()
+        {
+            Boolean bTableExists;
+            String strTargetBaseFilePath;
+            DataRow xRow;
+            DataTable xResults;
+            OrionException xOrionException;
+            OrionDatabaseSQLite xBase;
+            OrionEventManager xEventManager;
+
+            bTableExists = true;
+            strTargetBaseFilePath = Path.Combine(OrionDatabaseSQLiteTests.strTestsNoPasswordDirectoryPath, "Logs", "ReportEvent Information Default Table Ok", OrionDatabaseSQLiteTests.strTESTBASEFILENAME);
+            xResults = null;
+            xOrionException = null;
+            xEventManager = null;
+            xBase = null;
+
+            OrionDatabaseSQLiteTests.CheckTestDatabaseFile(strTargetBaseFilePath);
+
+            try
+            {
+                xBase = new OrionDatabaseSQLite(strTargetBaseFilePath);
+                xBase.PersistentConnection = true;
+            }
+            catch (OrionException ex)
+            {
+                xOrionException = ex as OrionException;
+            }
+            Assert.IsNull(xOrionException);
+
+            xBase.InitLogs(createMissingTable: true);
+            Assert.IsTrue(xBase.LogInfoConfig.IsInitialized);
+            Assert.AreEqual(xBase.LogInfoConfig.TableName, "T_Logs");
+            Assert.AreEqual(xBase.LogInfoConfig.DateFieldName, "CreationDate");
+            Assert.AreEqual(xBase.LogInfoConfig.SourceApplicationFieldName, "SourceApplication");
+            Assert.AreEqual(xBase.LogInfoConfig.TypeLogFieldName, "Type");
+            Assert.AreEqual(xBase.LogInfoConfig.MessageFieldName, "Message");
+            Assert.IsNull(xBase.LogInfoConfig.Comment1FieldName);
+            Assert.IsNull(xBase.LogInfoConfig.Comment2FieldName);
+
+            Assert.IsTrue(xBase.LogErrorConfig.IsInitialized);
+            Assert.AreEqual(xBase.LogErrorConfig.TableName, xBase.LogInfoConfig.TableName);
+            Assert.AreEqual(xBase.LogErrorConfig.DateFieldName, xBase.LogInfoConfig.DateFieldName);
+            Assert.AreEqual(xBase.LogErrorConfig.SourceApplicationFieldName, xBase.LogInfoConfig.SourceApplicationFieldName);
+            Assert.AreEqual(xBase.LogErrorConfig.TypeLogFieldName, xBase.LogInfoConfig.TypeLogFieldName);
+            Assert.AreEqual(xBase.LogErrorConfig.MessageFieldName, xBase.LogInfoConfig.MessageFieldName);
+            Assert.IsNull(xBase.LogErrorConfig.Comment1FieldName);
+            Assert.IsNull(xBase.LogErrorConfig.Comment2FieldName);
+
+            try
+            {
+                bTableExists = xBase.TableExits("T_Logs");
+            }
+            catch (OrionException ex)
+            {
+                xOrionException = ex;
+            }
+            Assert.IsNull(xOrionException);
+            Assert.IsTrue(bTableExists);
+            Assert.AreEqual(xBase.ConnectionState, ConnectionState.Open);
+
+            try
+            {
+                xEventManager = new OrionEventManager(xBase);
+                xEventManager.ReportEvent("Information log test", EventTypes.Information);
+            }
+            catch (OrionException ex)
+            {
+                xOrionException = ex as OrionException;
+            }
+            Assert.IsNull(xOrionException);
+
+            try
+            {
+                xBase.PersistentConnection = false;
+                xResults = (DataTable)xBase.PrepareQuerySelect("SELECT * FROM " + xBase.LogInfoConfig.TableName).Execute();
+            }
+            catch (OrionException ex)
+            {
+                xOrionException = ex;
+            }
+            Assert.IsNull(xOrionException);
+            Assert.IsNotNull(xResults);
+            Assert.IsTrue(xResults.Columns.Contains(xBase.LogInfoConfig.DateFieldName));
+            Assert.IsTrue(xResults.Columns.Contains(xBase.LogInfoConfig.SourceApplicationFieldName));
+            Assert.IsTrue(xResults.Columns.Contains(xBase.LogInfoConfig.TypeLogFieldName));
+            Assert.IsTrue(xResults.Columns.Contains(xBase.LogInfoConfig.MessageFieldName));
+            Assert.AreEqual(xBase.ConnectionState, ConnectionState.Closed);
+            Assert.AreEqual(xResults.Rows.Count, 1);
+
+            xRow = xResults.Rows[0];
+            Assert.AreEqual(xRow[xBase.LogInfoConfig.SourceApplicationFieldName], xEventManager.Log.SourceApplicationName);
+            Assert.AreEqual(xRow[xBase.LogInfoConfig.TypeLogFieldName], xEventManager.Log.EventType.ToString());
+            Assert.AreEqual(xRow[xBase.LogInfoConfig.MessageFieldName], xEventManager.Log.LogMessage);
+
+            xBase.Dispose();
+            xBase = null;
+        }// NoPassword_Logs_ReportEvent_Default_Table_Ok()
+        [TestMethod, TestCategory("OrionDatabaseSQLite")]
+        public void NoPassword_Logs_ReportEvent_Warning_User_Table_Ok()
+        {
+            Boolean bTableExists;
+            String strTargetBaseFilePath;
+            DataRow xRow;
+            DataTable xResults;
+            OrionException xOrionException;
+            OrionDatabaseSQLite xBase;
+            OrionEventManager xEventManager;
+
+            bTableExists = true;
+            strTargetBaseFilePath = Path.Combine(OrionDatabaseSQLiteTests.strTestsNoPasswordDirectoryPath, "Logs", "ReportEvent Warning User Table Ok", OrionDatabaseSQLiteTests.strTESTBASEFILENAME);
+            xResults = null;
+            xOrionException = null;
+            xEventManager = null;
+            xBase = null;
+
+            OrionDatabaseSQLiteTests.CheckTestDatabaseFile(strTargetBaseFilePath);
+
+            try
+            {
+                xBase = new OrionDatabaseSQLite(strTargetBaseFilePath);
+                xBase.PersistentConnection = true;
+            }
+            catch (OrionException ex)
+            {
+                xOrionException = ex as OrionException;
+            }
+            Assert.IsNull(xOrionException);
+
+            xBase.InitLogs(tableName: "T_Logs_Informations", dateFieldName: "LogDate", sourceApplicationFieldName: "Application", logTypeFieldName: "EventType", messageFieldName: "Message", comment1FieldName: "Comment1", comment2FieldName: "Comment2", createMissingTable: true);
+            Assert.IsTrue(xBase.LogInfoConfig.IsInitialized);
+            Assert.AreEqual(xBase.LogInfoConfig.TableName, "T_Logs_Informations");
+            Assert.AreEqual(xBase.LogInfoConfig.DateFieldName, "LogDate");
+            Assert.AreEqual(xBase.LogInfoConfig.SourceApplicationFieldName, "Application");
+            Assert.AreEqual(xBase.LogInfoConfig.TypeLogFieldName, "EventType");
+            Assert.AreEqual(xBase.LogInfoConfig.MessageFieldName, "Message");
+            Assert.AreEqual(xBase.LogInfoConfig.Comment1FieldName, "Comment1");
+            Assert.AreEqual(xBase.LogInfoConfig.Comment2FieldName, "Comment2");
+
+            Assert.IsTrue(xBase.LogErrorConfig.IsInitialized);
+            Assert.AreEqual(xBase.LogErrorConfig.TableName, xBase.LogInfoConfig.TableName);
+            Assert.AreEqual(xBase.LogErrorConfig.DateFieldName, xBase.LogInfoConfig.DateFieldName);
+            Assert.AreEqual(xBase.LogErrorConfig.SourceApplicationFieldName, xBase.LogInfoConfig.SourceApplicationFieldName);
+            Assert.AreEqual(xBase.LogErrorConfig.TypeLogFieldName, xBase.LogInfoConfig.TypeLogFieldName);
+            Assert.AreEqual(xBase.LogErrorConfig.MessageFieldName, xBase.LogInfoConfig.MessageFieldName);
+            Assert.AreEqual(xBase.LogErrorConfig.Comment1FieldName, xBase.LogInfoConfig.Comment1FieldName);
+            Assert.AreEqual(xBase.LogErrorConfig.Comment2FieldName, xBase.LogInfoConfig.Comment2FieldName);
+
+            try
+            {
+                bTableExists = xBase.TableExits("T_Logs_Informations");
+            }
+            catch (OrionException ex)
+            {
+                xOrionException = ex;
+            }
+            Assert.IsNull(xOrionException);
+            Assert.IsTrue(bTableExists);
+            Assert.AreEqual(xBase.ConnectionState, ConnectionState.Open);
+
+            try
+            {
+                xEventManager = new OrionEventManager(xBase);
+                xEventManager.ReportEvent("Information log test", EventTypes.Warning, "Test comment 1", "Test comment 2");
+            }
+            catch (OrionException ex)
+            {
+                xOrionException = ex as OrionException;
+            }
+            Assert.IsNull(xOrionException);
+
+            try
+            {
+                xBase.PersistentConnection = false;
+                xResults = (DataTable)xBase.PrepareQuerySelect("SELECT * FROM " + xBase.LogInfoConfig.TableName).Execute();
+            }
+            catch (OrionException ex)
+            {
+                xOrionException = ex;
+            }
+            Assert.IsNull(xOrionException);
+            Assert.IsNotNull(xResults);
+            Assert.IsTrue(xResults.Columns.Contains(xBase.LogInfoConfig.DateFieldName));
+            Assert.IsTrue(xResults.Columns.Contains(xBase.LogInfoConfig.SourceApplicationFieldName));
+            Assert.IsTrue(xResults.Columns.Contains(xBase.LogInfoConfig.TypeLogFieldName));
+            Assert.IsTrue(xResults.Columns.Contains(xBase.LogInfoConfig.MessageFieldName));
+            Assert.IsTrue(xResults.Columns.Contains(xBase.LogInfoConfig.Comment1FieldName));
+            Assert.IsTrue(xResults.Columns.Contains(xBase.LogInfoConfig.Comment2FieldName));
+            Assert.AreEqual(xBase.ConnectionState, ConnectionState.Closed);
+            Assert.AreEqual(xResults.Rows.Count, 1);
+
+            xRow = xResults.Rows[0];
+            Assert.AreEqual(xRow[xBase.LogInfoConfig.SourceApplicationFieldName], xEventManager.Log.SourceApplicationName);
+            Assert.AreEqual(xRow[xBase.LogInfoConfig.TypeLogFieldName], xEventManager.Log.EventType.ToString());
+            Assert.AreEqual(xRow[xBase.LogInfoConfig.MessageFieldName], xEventManager.Log.LogMessage);
+            Assert.AreEqual(xRow[xBase.LogInfoConfig.Comment1FieldName], xEventManager.Log.Comment1);
+            Assert.AreEqual(xRow[xBase.LogInfoConfig.Comment2FieldName], xEventManager.Log.Comment2);
+
+            xBase.Dispose();
+            xBase = null;
+        }// NoPassword_Logs_ReportEvent_Warning_User_Table_Ok()
+        [TestMethod, TestCategory("OrionDatabaseSQLite")]
+        public void NoPassword_Logs_ReportEvent_User_Tables_Ok()
+        {
+            Boolean bTableExists;
+            String strTargetBaseFilePath;
+            DataRow xRow;
+            DataTable xResults;
+            OrionLogInfos xLogErrors, xLogInformations;
+            OrionException xOrionException;
+            OrionDatabaseSQLite xBase;
+            OrionEventManager xEventManager;
+
+            bTableExists = true;
+            xLogInformations = null;
+            xLogErrors = null;
+            strTargetBaseFilePath = Path.Combine(OrionDatabaseSQLiteTests.strTestsNoPasswordDirectoryPath, "Logs", "ReportEvent User Tables Ok", OrionDatabaseSQLiteTests.strTESTBASEFILENAME);
+            xResults = null;
+            xOrionException = null;
+            xEventManager = null;
+            xBase = null;
+
+            OrionDatabaseSQLiteTests.CheckTestDatabaseFile(strTargetBaseFilePath);
+
+            try
+            {
+                xBase = new OrionDatabaseSQLite(strTargetBaseFilePath);
+                xBase.PersistentConnection = true;
+            }
+            catch (OrionException ex)
+            {
+                xOrionException = ex as OrionException;
+            }
+            Assert.IsNull(xOrionException);
+
+            xBase.InitInformationLogs(tableName: "T_Logs_Informations", dateFieldName: "LogDateInfos", sourceApplicationFieldName: "ApplicationInfos", logTypeFieldName: "EventTypeInfos", messageFieldName: "MessageInfos", comment1FieldName: "Comment1Infos", comment2FieldName: "Comment2Infos", createMissingTable: true);
+            Assert.IsTrue(xBase.LogInfoConfig.IsInitialized);
+            Assert.AreEqual(xBase.LogInfoConfig.TableName, "T_Logs_Informations");
+            Assert.AreEqual(xBase.LogInfoConfig.DateFieldName, "LogDateInfos");
+            Assert.AreEqual(xBase.LogInfoConfig.SourceApplicationFieldName, "ApplicationInfos");
+            Assert.AreEqual(xBase.LogInfoConfig.TypeLogFieldName, "EventTypeInfos");
+            Assert.AreEqual(xBase.LogInfoConfig.MessageFieldName, "MessageInfos");
+            Assert.AreEqual(xBase.LogInfoConfig.Comment1FieldName, "Comment1Infos");
+            Assert.AreEqual(xBase.LogInfoConfig.Comment2FieldName, "Comment2Infos");
+
+            xBase.InitErrorLogs(tableName: "T_Logs_Errors", dateFieldName: "LogDateErrors", sourceApplicationFieldName: "ApplicationErrors", logTypeFieldName: "EventTypeErrors", messageFieldName: "MessageErrors", comment1FieldName: "Comment1Errors", comment2FieldName: "Comment2Errors", createMissingTable: true);
+            Assert.IsTrue(xBase.LogErrorConfig.IsInitialized);
+            Assert.AreEqual(xBase.LogErrorConfig.TableName, "T_Logs_Errors");
+            Assert.AreEqual(xBase.LogErrorConfig.DateFieldName, "LogDateErrors");
+            Assert.AreEqual(xBase.LogErrorConfig.SourceApplicationFieldName, "ApplicationErrors");
+            Assert.AreEqual(xBase.LogErrorConfig.TypeLogFieldName, "EventTypeErrors");
+            Assert.AreEqual(xBase.LogErrorConfig.MessageFieldName, "MessageErrors");
+            Assert.AreEqual(xBase.LogErrorConfig.Comment1FieldName, "Comment1Errors");
+            Assert.AreEqual(xBase.LogErrorConfig.Comment2FieldName, "Comment2Errors");
+
+            try
+            {
+                bTableExists = xBase.TableExits("T_Logs_Informations");
+            }
+            catch (OrionException ex)
+            {
+                xOrionException = ex;
+            }
+            Assert.IsNull(xOrionException);
+            Assert.IsTrue(bTableExists);
+            Assert.AreEqual(xBase.ConnectionState, ConnectionState.Open);
+
+            try
+            {
+                bTableExists = xBase.TableExits("T_Logs_Errors");
+            }
+            catch (OrionException ex)
+            {
+                xOrionException = ex;
+            }
+            Assert.IsNull(xOrionException);
+            Assert.IsTrue(bTableExists);
+            Assert.AreEqual(xBase.ConnectionState, ConnectionState.Open);
+
+            try
+            {
+                xEventManager = new OrionEventManager(xBase);
+                xLogInformations = xEventManager.ReportEvent("Information log test", EventTypes.Information, "Test information comment 1", "Test information comment 2");
+            }
+            catch (OrionException ex)
+            {
+                xOrionException = ex as OrionException;
+            }
+            Assert.IsNull(xOrionException);
+
+            try
+            {
+                xEventManager = new OrionEventManager(xBase);
+                xLogErrors = xEventManager.ReportEvent("Warning log test", EventTypes.Warning, "Test warning comment 1", "Test warning comment 2");
+            }
+            catch (OrionException ex)
+            {
+                xOrionException = ex as OrionException;
+            }
+            Assert.IsNull(xOrionException);
+
+            try
+            {
+                xResults = (DataTable)xBase.PrepareQuerySelect("SELECT * FROM " + xBase.LogInfoConfig.TableName).Execute();
+            }
+            catch (OrionException ex)
+            {
+                xOrionException = ex;
+            }
+            Assert.IsNull(xOrionException);
+            Assert.IsNotNull(xResults);
+            Assert.IsTrue(xResults.Columns.Contains(xBase.LogInfoConfig.DateFieldName));
+            Assert.IsTrue(xResults.Columns.Contains(xBase.LogInfoConfig.SourceApplicationFieldName));
+            Assert.IsTrue(xResults.Columns.Contains(xBase.LogInfoConfig.TypeLogFieldName));
+            Assert.IsTrue(xResults.Columns.Contains(xBase.LogInfoConfig.MessageFieldName));
+            Assert.IsTrue(xResults.Columns.Contains(xBase.LogInfoConfig.Comment1FieldName));
+            Assert.IsTrue(xResults.Columns.Contains(xBase.LogInfoConfig.Comment2FieldName));
+            Assert.AreEqual(xBase.ConnectionState, ConnectionState.Open);
+            Assert.AreEqual(xResults.Rows.Count, 1);
+
+            xRow = xResults.Rows[0];
+            Assert.AreEqual(xRow[xBase.LogInfoConfig.SourceApplicationFieldName], xLogInformations.SourceApplicationName);
+            Assert.AreEqual(xRow[xBase.LogInfoConfig.TypeLogFieldName], xLogInformations.EventType.ToString());
+            Assert.AreEqual(xRow[xBase.LogInfoConfig.MessageFieldName], xLogInformations.LogMessage);
+            Assert.AreEqual(xRow[xBase.LogInfoConfig.Comment1FieldName], xLogInformations.Comment1);
+            Assert.AreEqual(xRow[xBase.LogInfoConfig.Comment2FieldName], xLogInformations.Comment2);
+
+
+            try
+            {
+                xResults = (DataTable)xBase.PrepareQuerySelect("SELECT * FROM " + xBase.LogErrorConfig.TableName).Execute();
+            }
+            catch (OrionException ex)
+            {
+                xOrionException = ex;
+            }
+            Assert.IsNull(xOrionException);
+            Assert.IsNotNull(xResults);
+            Assert.IsTrue(xResults.Columns.Contains(xBase.LogErrorConfig.DateFieldName));
+            Assert.IsTrue(xResults.Columns.Contains(xBase.LogErrorConfig.SourceApplicationFieldName));
+            Assert.IsTrue(xResults.Columns.Contains(xBase.LogErrorConfig.TypeLogFieldName));
+            Assert.IsTrue(xResults.Columns.Contains(xBase.LogErrorConfig.MessageFieldName));
+            Assert.IsTrue(xResults.Columns.Contains(xBase.LogErrorConfig.Comment1FieldName));
+            Assert.IsTrue(xResults.Columns.Contains(xBase.LogErrorConfig.Comment2FieldName));
+            Assert.AreEqual(xBase.ConnectionState, ConnectionState.Open);
+            Assert.AreEqual(xResults.Rows.Count, 1);
+
+            xRow = xResults.Rows[0];
+            Assert.AreEqual(xRow[xBase.LogErrorConfig.SourceApplicationFieldName], xLogErrors.SourceApplicationName);
+            Assert.AreEqual(xRow[xBase.LogErrorConfig.TypeLogFieldName], xLogErrors.EventType.ToString());
+            Assert.AreEqual(xRow[xBase.LogErrorConfig.MessageFieldName], xLogErrors.LogMessage);
+            Assert.AreEqual(xRow[xBase.LogErrorConfig.Comment1FieldName], xLogErrors.Comment1);
+            Assert.AreEqual(xRow[xBase.LogErrorConfig.Comment2FieldName], xLogErrors.Comment2);
+
+            xBase.Dispose();
+            xBase = null;
+        }// NoPassword_Logs_ReportEvent_Information_User_Tables_Ok()
         #endregion
 
         #region Base creation tests
@@ -2447,6 +3118,18 @@ namespace OrionDatabasesTests
             }
             Assert.IsNull(xException, "Can't copy source database file;");
         }// CheckTestDatabaseFile()
+        private static void InitializeDirectories(String rootDirectoryPath, String[] strDirectoryNames)
+        {
+            String strTargetDirectoryPath;
+
+            if (Directory.Exists(rootDirectoryPath) == false) Directory.CreateDirectory(rootDirectoryPath);
+
+            foreach (String strDirectoryNameTemp in strDirectoryNames)
+            {
+                strTargetDirectoryPath = Path.Combine(rootDirectoryPath, strDirectoryNameTemp);
+                if (Directory.Exists(strTargetDirectoryPath) == false) Directory.CreateDirectory(strTargetDirectoryPath);
+            }
+        }// InitializeDirectories()
         #endregion
     }
 }
