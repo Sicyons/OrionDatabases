@@ -106,6 +106,27 @@ namespace OrionDatabases
 
             return xCommand;
         }// CreateCommand()
+         /// <exclude />
+        internal override DbCommand CreateCommandGetLastValue(String tableName, String fieldName)
+        {
+            String strQuery;
+            SQLiteCommand xCommand;
+
+            strQuery = "select " + fieldName + " from " + tableName + " where rowid = (select max(rowid) from " + tableName + ")";
+
+            try
+            {
+                xCommand = new SQLiteCommand(strQuery, (SQLiteConnection)this.Connection);
+            }
+            catch (DbException ex)
+            {
+                throw new OrionException("Can't create SQLiteCommand;", ex, "SqlQuery=" + strQuery);
+            }
+
+            xCommand.Transaction = (SQLiteTransaction)this.Transaction;
+
+            return xCommand;
+        }// CreateCommandGetLastValue()
         /// <exclude />
         internal override DbParameter CreateParameter(String key, Object value)
         {

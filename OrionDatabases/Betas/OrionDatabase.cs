@@ -178,6 +178,8 @@ namespace OrionDatabases
         /// <exclude />
         internal abstract DbCommand CreateCommand(String xSqlRequest);
         /// <exclude />
+        internal abstract DbCommand CreateCommandGetLastValue(String tableName, String fieldName);
+        /// <exclude />
         internal abstract DbDataAdapter CreateDataAdapter(String sqlRequest);
         /// <exclude />
         internal abstract DbParameter CreateParameter(String key, Object value);

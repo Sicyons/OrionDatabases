@@ -8,15 +8,23 @@ namespace OrionDatabases.Queries
 {
     public class OrionInsertQuery : OrionQuery
     {
+        #region Fields
+        private DbCommand xNewIdCommand;
+        #endregion
+
         #region Properties
         public Int32 ChangedRows { get; private set; }
+        public String IdFieldName { get; private set; }
+        public String TableName { get; private set; }
         #endregion
 
         #region Constructors
         internal OrionInsertQuery(OrionDatabase parentXDatabase, String tableName, params String[] fieldNames)
-            : base(parentXDatabase)
+        : base(parentXDatabase)
         {
             StringBuilder strQueryString, strColumns, strValues;
+
+            this.TableName = tableName;
 
             strQueryString = new StringBuilder("INSERT INTO " + tableName);
             strColumns = new StringBuilder("(");
@@ -102,8 +110,14 @@ namespace OrionDatabases.Queries
 
         public override Object Execute()
         {
+            return this.Execute(null);
+        }// Execute()
+        public Object Execute(String idFieldName)
+        {
+            Object objNewId;
             Exception xException;
 
+            objNewId = null;
             xException = null;
 
             if (this.ParentOrionDatabase.ConnectionState == ConnectionState.Closed) this.ParentOrionDatabase.Connect();
@@ -115,6 +129,12 @@ namespace OrionDatabases.Queries
             catch (DbException ex)
             {
                 xException = ex;
+            }
+
+            if (xException == null && String.IsNullOrEmpty(idFieldName) == false)
+            {
+                this.xNewIdCommand = this.ParentOrionDatabase.CreateCommandGetLastValue(this.TableName, idFieldName);
+                objNewId = this.xNewIdCommand.ExecuteScalar();
             }
 
             if (xException == null)
@@ -131,7 +151,10 @@ namespace OrionDatabases.Queries
                 throw new OrionException("Can't execute DbCommand.ExecuteNonQuery();", xException, "SqlQuery=" + this.QueryString);
             }
 
-            return this.ChangedRows;
+            if (String.IsNullOrEmpty(idFieldName) == true)
+                return this.ChangedRows;
+            else
+                return objNewId;
         }// Execute()
         #endregion
     }

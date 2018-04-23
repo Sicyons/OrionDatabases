@@ -66,7 +66,7 @@ namespace OrionDatabasesTests
                 OrionDatabaseSQLiteTests.InitializeDirectories(Path.Combine(OrionDatabaseSQLiteTests.strTestsNoPasswordDirectoryPath, "Delete Queries"), new String[] { "No Table", "Unknown Table", "Whole Table", "Row With Parameters" });
 
                 // No Password INSERT queries.
-                OrionDatabaseSQLiteTests.InitializeDirectories(Path.Combine(OrionDatabaseSQLiteTests.strTestsNoPasswordDirectoryPath, "Insert Queries"), new String[] { "No Table", "Unknown Table", "No Field Names", "No Row", "Whole Row", "Row By Parameters" });
+                OrionDatabaseSQLiteTests.InitializeDirectories(Path.Combine(OrionDatabaseSQLiteTests.strTestsNoPasswordDirectoryPath, "Insert Queries"), new String[] { "No Table", "Unknown Table", "No Field Names", "No Row", "Whole Row", "Row By Parameters", "Row By Parameters Get New Id Ok" });
 
                 // No Password SELECT queries.
                 OrionDatabaseSQLiteTests.InitializeDirectories(Path.Combine(OrionDatabaseSQLiteTests.strTestsNoPasswordDirectoryPath, "Select Queries"), new String[] { "No Query", "Bad Query", "Ok", "With Parameters Ok", "With Missing Parameter", "With Unnamed Parameter" });
@@ -2305,6 +2305,114 @@ namespace OrionDatabasesTests
 
             xBase.Dispose();
         }// NoPassword_Insert_RowByParameters_Ok()
+        [TestMethod, TestCategory("OrionDatabaseSQLite")]
+        public void NoPassword_Insert_RowByParameters_Get_NewId_Ok()
+        {
+            Int64 lNewId, lRowCount, lRowCount2;
+            String strTargetBaseFilePath;
+            OrionDeleteQuery xDeleteQuery;
+            OrionInsertQuery xInsertQuery;
+            OrionRowCountQuery xRowCountQuery;
+            OrionException xOrionException;
+            OrionDatabaseSQLite xBase;
+
+            lNewId = 0L;
+            lRowCount = 0L;
+            lRowCount2 = 0L;
+            strTargetBaseFilePath = Path.Combine(OrionDatabaseSQLiteTests.strTestsNoPasswordDirectoryPath, "Insert Queries", "Row By Parameters Get New Id Ok", OrionDatabaseSQLiteTests.strTESTBASEFILENAME);
+            xOrionException = null;
+            xRowCountQuery = null;
+            xBase = null;
+
+            OrionDatabaseSQLiteTests.CheckTestDatabaseFile(strTargetBaseFilePath);
+
+            try
+            {
+                xBase = new OrionDatabaseSQLite(strTargetBaseFilePath);
+                xBase.PersistentConnection = true;
+            }
+            catch (OrionException ex)
+            {
+                if (xBase != null) xBase.Dispose();
+                xOrionException = ex as OrionException;
+            }
+            Assert.IsNull(xOrionException);
+            Assert.AreEqual(xBase.ConnectionState, ConnectionState.Closed);
+
+            try
+            {
+                xRowCountQuery = xBase.PrepareQueryRowCount("T_Movies");
+                lRowCount = (Int64)xRowCountQuery.Execute();
+            }
+            catch (OrionException ex)
+            {
+                xBase.Dispose();
+                xOrionException = ex;
+            }
+            Assert.IsNull(xOrionException);
+            Assert.AreEqual(xBase.ConnectionState, ConnectionState.Open);
+
+            try
+            {
+                xInsertQuery = xBase.PrepareQueryInsert("T_Movies", "TitleOriginal", "TitleFrench", "Country", "Year");
+                xInsertQuery["TitleOriginal"] = "Backdraft";
+                xInsertQuery["TitleFrench"] = "Backdraft";
+                xInsertQuery["Country"] = "US";
+                xInsertQuery["year"] = 1989;
+
+                lNewId = (Int64)xInsertQuery.Execute("Id");
+            }
+            catch (OrionException ex)
+            {
+                xBase.Dispose();
+                xOrionException = ex;
+            }
+            Assert.IsNull(xOrionException);
+            Assert.AreEqual(lNewId, 21L);
+            Assert.AreEqual(xBase.ConnectionState, ConnectionState.Open);
+
+            try
+            {
+                lRowCount2 = (Int64)xRowCountQuery.Execute();
+            }
+            catch (OrionException ex)
+            {
+                xBase.Dispose();
+                xOrionException = ex;
+            }
+            Assert.IsNull(xOrionException);
+            Assert.AreEqual(lRowCount2, lRowCount + 1);
+            Assert.AreEqual(xBase.ConnectionState, ConnectionState.Open);
+
+            try
+            {
+                xDeleteQuery = xBase.PrepareQueryDelete("T_Movies", "Id>=@param1");
+                xDeleteQuery.AddParameter("Param1", 21L);
+                xDeleteQuery.Execute();
+            }
+            catch (OrionException ex)
+            {
+                xBase.Dispose();
+                xOrionException = ex;
+            }
+            Assert.IsNull(xOrionException);
+            Assert.AreEqual(xBase.ConnectionState, ConnectionState.Open);
+
+            try
+            {
+                lRowCount = (Int64)xRowCountQuery.Execute();
+            }
+            catch (OrionException ex)
+            {
+                xBase.Dispose();
+                xOrionException = ex;
+            }
+            Assert.IsNull(xOrionException);
+            Assert.AreEqual(lRowCount, lRowCount);
+            Assert.AreEqual(xBase.ConnectionState, ConnectionState.Open);
+
+            xBase.Dispose();
+        }// NoPassword_Insert_RowByParameters_Get_NewId_Ok()
         #endregion
 
         #region RowCount Query
